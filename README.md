@@ -54,7 +54,14 @@ JWT_SECRET=
 ### 4. Install Dependencies
 
 ```bash
-npm install
+# Base packages
+npm install express mysql2 stripe jsonwebtoken bcryptjs dotenv cors
+
+# TypeScript + runtime
+npm install typescript ts-node-dev
+
+# Dev-only tools and types
+npm install --save-dev nodemon @types/node @types/express @types/bcryptjs @types/cors
 ```
 
 ### 5. Run the Server (Development)
