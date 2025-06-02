@@ -43,18 +43,25 @@ npm init -y
 
 ```bash
 # backend/.env
-PORT=3000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=password
-DB_NAME=news_platform
-JWT_SECRET=supersecretkey
+PORT=
+DB_HOST=
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+JWT_SECRET=
 ```
 
 ### 4. Install Dependencies
 
 ```bash
-npm install
+# Base packages
+npm install express mysql2 stripe jsonwebtoken bcryptjs dotenv cors
+
+# TypeScript + runtime
+npm install typescript ts-node-dev
+
+# Dev-only tools and types
+npm install --save-dev nodemon @types/node @types/express @types/bcryptjs @types/cors
 ```
 
 ### 5. Run the Server (Development)
@@ -88,7 +95,7 @@ You can use [Postman](https://www.postman.com/) or curl:
 
 ---
 
-## 📄 .gitignore (recommended)
+## 📄 .gitignore
 
 ```gitignore
 node_modules/
