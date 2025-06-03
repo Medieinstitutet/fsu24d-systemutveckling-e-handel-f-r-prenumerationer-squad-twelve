@@ -39,7 +39,7 @@ const CreateAccount = () => {
     }
 
     try {
-      const response = await fetch("/api/create-account", {
+      const response = await fetch("/api/create-account", { /* change so its the right paht */
         method: "POST",
         headers: {
           "Content-Type": "application/json",

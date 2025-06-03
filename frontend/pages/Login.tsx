@@ -74,8 +74,8 @@ const Login = () => {
 
         {error && <p style={{ color: "red" }}>{error}</p>}
 
-        <div style={{ marginTop: "1rem" }}>
-          <Link to="/Dashboard">Dashboard</Link>
+        <div>
+      {/*     <Link to="/Dashboard">Dashboard</Link> */}  {/* todo: when logged in redirect to dashboard with the right plan. */}
           <br />
           <Link to="/CreateAccount">Create Account</Link>
         </div>
