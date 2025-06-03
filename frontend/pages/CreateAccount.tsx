@@ -9,27 +9,26 @@ const CreateAccount = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "",
   });
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(false);
 
-    const { name, email, password, confirmPassword, userType } = formData;
+    const { name, email, password, confirmPassword } = formData;
 
-    if (!name || !email || !password || !confirmPassword || !userType) {
+    if (!name || !email || !password || !confirmPassword) {
       setError("All fields are required.");
       return;
     }
@@ -39,15 +38,29 @@ const CreateAccount = () => {
       return;
     }
 
-    console.log("Account created:", formData);
-    setSuccess(true);
-    setFormData({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      userType: "",
-    });
+    try {
+      const response = await fetch("/api/create-account", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Something went wrong while creating the account.");
+      }
+
+      setSuccess(true);
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to create account.");
+    }
   };
 
   return (
@@ -89,7 +102,10 @@ const CreateAccount = () => {
           {success && (
             <p style={{ color: "green" }}>Account created successfully!</p>
           )}
-          <button className="formbtn" type="submit">Create Account</button>
+
+          <button className="formbtn" type="submit">
+            Create Account
+          </button>
         </form>
       </main>
       <Footer />
