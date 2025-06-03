@@ -24,7 +24,7 @@ const Login = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok && data.token) {
         navigate("/Dashboard");
       } else {
         setError(data.message || "Invalid email or password");
