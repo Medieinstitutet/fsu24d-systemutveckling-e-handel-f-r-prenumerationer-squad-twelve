@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
+import "../styles/headercontainer.css";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -41,9 +42,9 @@ const Login = () => {
   return (
     <>
       <Header />
-      <div>
+      <div className="main-container">
         <h1>Login</h1>
-        <form onSubmit={handleSubmit}>
+        <form className="loginform" onSubmit={handleSubmit}>
           <label>
             Email:
             <input
@@ -66,7 +67,7 @@ const Login = () => {
               required
             />
           </label>
-          <button type="submit" disabled={loading}>
+          <button className="loginbtn" type="submit" disabled={loading}>
             {loading ? "Logging in..." : "Log in"}
           </button>
         </form>

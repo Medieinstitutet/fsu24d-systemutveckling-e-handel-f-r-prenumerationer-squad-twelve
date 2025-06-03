@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
+import "../styles/headercontainer.css";
 
 const CreateAccount = () => {
   const [formData, setFormData] = useState({
@@ -52,9 +53,9 @@ const CreateAccount = () => {
   return (
     <>
       <Header />
-      <main>
+      <main className="main-container">
         <h1>Create Account</h1>
-        <form onSubmit={handleSubmit}>
+        <form className="createform" onSubmit={handleSubmit}>
           <input
             type="text"
             name="name"
@@ -88,7 +89,7 @@ const CreateAccount = () => {
           {success && (
             <p style={{ color: "green" }}>Account created successfully!</p>
           )}
-          <button type="submit">Create Account</button>
+          <button className="formbtn" type="submit">Create Account</button>
         </form>
       </main>
       <Footer />

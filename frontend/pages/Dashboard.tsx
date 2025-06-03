@@ -1,10 +1,13 @@
 import Header from "./Header";
 import Footer from "./Footer";
+import "../styles/headercontainer.css";
 
 const Dashboard = () => (
   <>
     <Header />
-    <h1>Dashboard</h1>
+    <div className="main-container">
+      <h1>Dashboard</h1>
+    </div>
     <Footer />
   </>
 );

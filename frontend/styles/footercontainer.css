@@ -1,0 +1,13 @@
+.footer-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  padding: 1rem 0; /* Ta bort sidopadding för perfekt centrerat innehåll */
+  background-color: #000000;
+  color: white;
+  text-align: center;
+  z-index: 999;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box; /* Säkerställer att padding inte lägger till bredd */
+}

@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import Footer from "./Footer";
+import "../styles/headercontainer.css";
 
 const BuyNow = () => (
   <>
     <h1>Buy Now</h1>
-    <nav>
-      <Link to="/TheCurious">TheCurious</Link>
-      <Link to="/TheInformed">TheInformed</Link>
-      <Link to="/TheInsider">TheInsider</Link>
+    <nav className="navcontainer">
+      <Link to="/TheCurious">The Curious</Link>
+      <Link to="/TheInformed">The Informed</Link>
+      <Link to="/TheInsider">The Insider</Link>
     </nav>
     <Footer />
   </>
