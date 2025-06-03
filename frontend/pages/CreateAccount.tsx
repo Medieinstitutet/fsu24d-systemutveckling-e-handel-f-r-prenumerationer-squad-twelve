@@ -8,7 +8,7 @@ const CreateAccount = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "", 
+    userType: "",
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -83,20 +83,11 @@ const CreateAccount = () => {
             value={formData.confirmPassword}
             onChange={handleChange}
           />
-          
-          <select
-            name="userType"
-            value={formData.userType}
-            onChange={handleChange}
-          >
-            <option value="">Select user type</option>
-            <option value="curious">The Curious</option>
-            <option value="informed">The Informed</option>
-            <option value="insider">The Insider</option>
-          </select>
 
           {error && <p style={{ color: "red" }}>{error}</p>}
-          {success && <p style={{ color: "green" }}>Account created successfully!</p>}
+          {success && (
+            <p style={{ color: "green" }}>Account created successfully!</p>
+          )}
           <button type="submit">Create Account</button>
         </form>
       </main>
