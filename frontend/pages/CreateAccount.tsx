@@ -14,9 +14,7 @@ const CreateAccount = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -39,8 +37,8 @@ const CreateAccount = () => {
     }
 
     try {
-      const response = await fetch("/api/create-account", { /* change so its the right paht */
-        method: "POST",
+      const response = await fetch("/api/create-account", {
+        /* change so its the right paht */ method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
