@@ -68,7 +68,7 @@ const Login = () => {
             />
           </label>
           <button className="loginbtn" type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Log in"}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
