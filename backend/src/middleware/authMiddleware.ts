@@ -7,7 +7,7 @@ dotenv.config();
 interface AuthPayload {
   id: number;
   email: string;
-  level: string;
+    level: 'not_subscribed' | 'curious' | 'informed' | 'insider';
 }
 
 // Augment Express' Request interface globally

@@ -7,7 +7,7 @@ import { db } from '../utils/db';
 dotenv.config();
 
 export const register = async (req: Request, res: Response): Promise<void> => {
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
 
   if (!email || !password) {
     res.status(400).json({ message: 'Email and password are required.' });
@@ -27,11 +27,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user
-    await db.query('INSERT INTO users (email, password) VALUES (?, ?)', [
-      email,
-      hashedPassword,
-    ]);
+    // Insert user with not_subscribed as default
+  await db.query(
+    'INSERT INTO users (name, email, password, subscription_level) VALUES (?, ?, ?, ?)',
+    [name || '', email, hashedPassword, 'not_subscribed']
+  );
 
     res.status(201).json({ message: 'User registered successfully ✅' });
   } catch (err) {

@@ -1,13 +1,52 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
-import "../styles/headercontainer.css";
 import Header from "./Header";
 import PlanSelector from "./PlanSelector";
 import "../styles/planselector.css";
 
 const TheInformed = () => {
-  const handleBuyNow = () => {
-    // TODO: Add Stripe Checkout logic here
-    console.log("Buy Now button clicked. Insert Stripe code here.");
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleBuyNow = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login?redirect=Theinformed");
+        return;
+      }
+
+      const response = await fetch(
+        "http://localhost:3000/subscription/create-checkout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ tier: "informed" }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.message || "Failed to create checkout session");
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      setError("Server error. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
