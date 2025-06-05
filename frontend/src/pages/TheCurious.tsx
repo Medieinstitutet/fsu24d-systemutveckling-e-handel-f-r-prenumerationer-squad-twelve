@@ -34,19 +34,47 @@ const TheCurious = () => {
     setUserLevel(level);
   }, []);
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     const token = localStorage.getItem("token");
-    if (token) {
-      window.location.href = "https://your-stripe-checkout-link.com";
-    } else {
+    if (!token) {
       navigate(
         "/login?redirectedFrom=thecurious&message=You need to log in or create an account to purchase this plan."
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:3000/subscription/create-checkout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ tier: "curious" }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+
+      const { url } = await response.json();
+
+      window.location.href = url;
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert(
+        "There was a problem starting the checkout process. Please try again."
       );
     }
   };
 
   const planLevel = accessPriority["curious"];
-  const canBuy = !userLevel || (userLevel && accessPriority[userLevel] < planLevel);
+  const canBuy =
+    !userLevel ||
+    (userLevel && accessPriority[userLevel] < planLevel);
 
   return (
     <>

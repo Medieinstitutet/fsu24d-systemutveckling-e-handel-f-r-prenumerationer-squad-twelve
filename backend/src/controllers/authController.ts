@@ -89,7 +89,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         id: user.id,
         name: user.name,
         email: user.email,
-        level: user.subscription_level || "curious",
+        level: user.subscription_level || "free",
       },
       JWT_SECRET,
       { expiresIn: '6h' }
