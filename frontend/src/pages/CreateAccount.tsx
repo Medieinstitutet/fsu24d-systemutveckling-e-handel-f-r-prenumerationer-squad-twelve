@@ -2,8 +2,10 @@ import { useState } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import "../styles/headercontainer.css";
+import { useNavigate } from "react-router-dom";
 
 const CreateAccount = () => {
+  const navigate = useNavigate(); 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -37,16 +39,18 @@ const CreateAccount = () => {
     }
 
     try {
-      const response = await fetch("/api/create-account", {
-        /* change so its the right paht */ method: "POST",
+      const response = await fetch("http://localhost:3000/auth/register", {
+       method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ name, email, password }),
       });
-
-      if (!response.ok) {
-        throw new Error("Something went wrong while creating the account.");
+      const data = await response.json()
+      if (response.ok) {
+        navigate('/dashboard')
+      } else {
+        setError(data.message || "Registration failed") 
       }
 
       setSuccess(true);

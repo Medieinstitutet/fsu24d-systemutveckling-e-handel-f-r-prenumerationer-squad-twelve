@@ -1,15 +1,37 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import "../styles/headercontainer.css";
+import { decodeToken } from "../utils/auth";
+import type { AuthPayload } from "../types/AuthPayload";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+
+  const searchParams = new URLSearchParams(location.search);
+  const message = searchParams.get("message");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const user: AuthPayload = decodeToken(token);
+        if (user) {
+          navigate("/dashboard");
+        }
+      } catch {
+        localStorage.removeItem("token");
+      }
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +48,10 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok && data.token) {
-        navigate("/Dashboard");
+        localStorage.setItem("token", data.token);
+        const user: AuthPayload = decodeToken(data.token);
+        localStorage.setItem("accessLevel", user.level);
+        navigate("/dashboard");
       } else {
         setError(data.message || "Invalid email or password");
       }
@@ -44,6 +69,9 @@ const Login = () => {
       <Header />
       <div className="main-container">
         <h1>Login</h1>
+
+        {message && <p style={{ color: "white" }}>{message}</p>}
+
         <form className="loginform" onSubmit={handleSubmit}>
           <label>
             Email:
@@ -75,7 +103,6 @@ const Login = () => {
         {error && <p style={{ color: "red" }}>{error}</p>}
 
         <div>
-      {/*     <Link to="/Dashboard">Dashboard</Link> */}  {/* todo: when logged in redirect to dashboard with the right plan. */}
           <br />
           <Link to="/CreateAccount">Create Account</Link>
         </div>

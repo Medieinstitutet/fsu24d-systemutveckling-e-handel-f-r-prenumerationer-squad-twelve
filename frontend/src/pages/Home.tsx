@@ -45,11 +45,6 @@ const Home = () => (
         </ul>
       </section>
 
-      <p className="home-description">
-        Stay updated with the latest news, carefully selected and delivered just
-        for you. Choose from our simple plans to get the news you want.
-      </p>
-
       <BuyNow />
     </div>
     <Footer />
