@@ -1,0 +1,12 @@
+.plan-description {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: #f0f0f0;
+  max-width: 700px;
+  margin: 1.5rem auto 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #333;
+  padding: 1.5rem 2rem;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+}

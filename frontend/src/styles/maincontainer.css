@@ -1,0 +1,116 @@
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+
+  padding-top: 120px;
+  padding-bottom: 80px;
+  text-align: center;
+}
+.navcontainer {
+  display: flex;
+  width: 100%;
+  max-width: 880px;
+  flex-direction: row;
+  justify-content: space-evenly;
+  text-align: left;
+  border: 1px solid black;
+  border-radius: 10px;
+  background-color: #121212;
+  padding: 20px;
+  margin: 0 auto; 
+  box-sizing: border-box; 
+  flex-wrap: wrap; 
+}
+
+.createform {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  margin: 0 auto;
+  background: #1a1a1a;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+  color: white;
+  font-family: system-ui, sans-serif;
+}
+
+.createform input {
+  margin-top: 0.5rem;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  font-size: 1rem;
+  background-color: #333;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.createform input:focus {
+  background-color: #444;
+  outline: none;
+}
+
+.formbtn {
+  margin-top: 1rem;
+  cursor: pointer;
+  background-color: green;
+}
+
+
+.loginform {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  margin: 0 auto;
+  background: #1a1a1a;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+  color: white;
+  font-family: system-ui, sans-serif;
+}
+
+.loginform label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #ccc;
+}
+
+.loginform input {
+  margin-top: 0.5rem;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  font-size: 1rem;
+  background-color: #333;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.loginform input:focus {
+  background-color: #444;
+  outline: none;
+}
+
+.loginbtn {
+  margin-top: 1rem;
+  cursor: pointer;
+  background-color: green;
+}
+
+@media (max-width: 600px) {
+  .navcontainer {
+    flex-direction: column;
+    align-items: center;
+  }
+}
