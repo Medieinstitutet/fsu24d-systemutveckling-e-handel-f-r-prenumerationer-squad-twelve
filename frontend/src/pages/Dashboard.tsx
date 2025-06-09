@@ -5,19 +5,29 @@ import Footer from "./Footer";
 import "../styles/headercontainer.css";
 import { isAuthenticated, getCurrentUser } from "../utils/auth";
 import type { NewsArticle } from "../types/NewsArticle";
-
-
-
+import Modal from "../modals/Modal";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+
   const [user, setUser] = useState<{
     name: string;
     email: string;
     level: string;
   } | null>(null);
+
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [error, setError] = useState("");
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState<{
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+  } | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -81,37 +91,78 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const handleCancelSubscription = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("You must be logged in");
-    return;
-  }
-
-  try {
-    const res = await fetch("http://localhost:3000/auth/cancel-subscription", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
+  const handleCancelSubscription = () => {
+    // Ask for confirmation using modal
+    setModalContent({
+      title: "Cancel Subscription",
+      message: "Are you sure you want to cancel your subscription?",
+      confirmText: "Yes, cancel it",
+      cancelText: "No, keep it",
+      onConfirm: () => {
+        setShowModal(false);
+        confirmCancelSubscription();
       },
+      onCancel: () => setShowModal(false),
     });
+    setShowModal(true);
+  };
 
-    if (!res.ok) {
-      const err = await res.json();
-      alert("Error: " + err.message);
+  const confirmCancelSubscription = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setModalContent({
+        title: "Error",
+        message: "You must be logged in to cancel your subscription.",
+        confirmText: "OK",
+        onConfirm: () => setShowModal(false),
+      });
+      setShowModal(true);
       return;
     }
 
-    const data = await res.json();
-    localStorage.setItem("token", data.token);  // update token with new subscription level
-    alert("Subscription cancelled! You are now on the free plan.");
-    setUser((prev) => (prev ? { ...prev, level: "free" } : null));
-  } catch (error) {
-    alert("Something went wrong.");
-    console.error(error);
-  }
-};
+    try {
+      const res = await fetch("http://localhost:3000/auth/cancel-subscription", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
+      if (!res.ok) {
+        const err = await res.json();
+        setModalContent({
+          title: "Error",
+          message: err.message || "Could not cancel subscription.",
+          confirmText: "OK",
+          onConfirm: () => setShowModal(false),
+        });
+        setShowModal(true);
+        return;
+      }
+
+      const data = await res.json();
+      localStorage.setItem("token", data.token); // Update token
+      setUser((prev) => (prev ? { ...prev, level: "free" } : null));
+
+      setModalContent({
+        title: "Subscription Cancelled",
+        message: "You are now on the free plan.",
+        confirmText: "OK",
+        onConfirm: () => setShowModal(false),
+      });
+      setShowModal(true);
+    } catch (error) {
+      console.error(error);
+      setModalContent({
+        title: "Error",
+        message: "Something went wrong. Please try again later.",
+        confirmText: "OK",
+        onConfirm: () => setShowModal(false),
+      });
+      setShowModal(true);
+    }
+  };
 
   return (
     <>
@@ -149,12 +200,15 @@ const Dashboard = () => {
       </div>
 
       {user && user.level !== "free" && (
-        <button onClick={handleCancelSubscription}>
+        <button className="cancelSubBtn" onClick={handleCancelSubscription}>
           Cancel My Subscription
         </button>
       )}
 
       <Footer />
+
+      {/* Show modal if needed */}
+      {showModal && modalContent && <Modal {...modalContent} />}
     </>
   );
 };
