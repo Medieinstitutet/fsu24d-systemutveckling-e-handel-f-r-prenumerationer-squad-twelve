@@ -37,10 +37,20 @@
 
 .home {
   margin-right: 10px;
+  color: #bb86fc !important;
+}
+
+.dashboard-link{
+  color: #bb86fc !important;
 }
 
 .login {
   margin-left: 10px;
+  color: #bb86fc !important;
+}
+
+.darkmode{
+  color: #bb86fc !important;
 }
 
 

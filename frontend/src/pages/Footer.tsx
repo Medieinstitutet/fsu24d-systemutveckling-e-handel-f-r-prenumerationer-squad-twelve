@@ -38,7 +38,9 @@ const Footer = () => {
   return (
     <footer className={`footer-container${isBottom ? " visible" : " hidden"}`}>
       <div className="footer-content">
-        <p>&copy; {new Date().getFullYear()} The Daily Dose.</p>
+        <p className="darkmode">
+          &copy; {new Date().getFullYear()} The Daily Dose.
+        </p>
         <button className="darkmode" onClick={toggleDarkMode}>
           {darkMode ? "Light Mode" : "Dark Mode"}
         </button>
