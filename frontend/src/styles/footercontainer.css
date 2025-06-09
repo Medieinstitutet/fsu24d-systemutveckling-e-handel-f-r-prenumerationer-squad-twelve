@@ -10,7 +10,7 @@
   z-index: 999;
   box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
-  transition: opacity 1.5s ease, visibility 0.1s ease !important;
+  transition: opacity 1.5s ease, visibility 0.s ease !important;
 }
 
 
@@ -82,4 +82,13 @@ body.dark-mode .light{
 
 body.dark-mode .header-h1{
   color: rgb(0, 0, 0) !important;
+}
+
+.need{
+  color: rgb(0, 0, 0);
+}
+
+
+body.dark-mode .need{
+  color: rgb(255, 255, 255) !important;
 }
