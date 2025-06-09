@@ -1,6 +1,6 @@
 import React from "react";
-import "../styles/modal.css";
-import type { ModalProps } from "../types/modal";
+import "../styles/Cancelmodal.css";
+import type { ModalProps } from "../types/CancelModal";
 
 
 

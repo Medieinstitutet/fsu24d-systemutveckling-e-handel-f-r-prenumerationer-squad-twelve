@@ -2,16 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Footer from "./Footer";
 import "../styles/headercontainer.css";
-
-interface Product {
-  tier: string;
-  productId: string;
-  priceId: string;
-  interval: string;
-  price: number;
-  displayPrice: string;
-  displayName: string;
-}
+import type { Product } from "../types/BuyNowProduct";
 
 const accessPriority: { [key: string]: number } = {
   free: 0,
@@ -42,7 +33,9 @@ const BuyNow = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:3000/subscription/products");
+        const response = await fetch(
+          "http://localhost:3000/subscription/products"
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch products");
@@ -50,12 +43,15 @@ const BuyNow = () => {
 
         const data = await response.json();
         const sortedProducts = data.sort(
-          (a: Product, b: Product) => accessPriority[a.tier] - accessPriority[b.tier]
+          (a: Product, b: Product) =>
+            accessPriority[a.tier] - accessPriority[b.tier]
         );
         setProducts(sortedProducts);
       } catch (err) {
         console.error("Error fetching products:", err);
-        setError("Could not load subscription options. Please try again later.");
+        setError(
+          "Could not load subscription options. Please try again later."
+        );
       } finally {
         setLoading(false);
       }
@@ -73,12 +69,12 @@ const BuyNow = () => {
   }
 
   return (
-    <>
+    <div className="buy-now-wrapper">
+      <h2 className="free-news-heading">Buy Now</h2>
       <p className="home-description">
         Stay updated with the latest news, carefully selected and delivered just
         for you. Choose from our simple plans to get the news you want.
       </p>
-      <h1>Buy Now</h1>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
@@ -86,17 +82,25 @@ const BuyNow = () => {
         <p>Loading subscription options...</p>
       ) : (
         <nav className="navcontainer">
-          {products.map((product) => (
-            userPriority < accessPriority[product.tier] && (
-              <Link key={product.tier} to={`/The${product.tier.charAt(0).toUpperCase() + product.tier.slice(1)}`}>
-                {product.displayName} - {product.displayPrice}/{product.interval}
-              </Link>
-            )
-          ))}
+          {products.map(
+            (product) =>
+              userPriority < accessPriority[product.tier] && (
+                <Link
+                  key={product.tier}
+                  to={`/The${
+                    product.tier.charAt(0).toUpperCase() + product.tier.slice(1)
+                  }`}
+                  className="product-link"
+                >
+                  {product.displayName} - {product.displayPrice}/
+                  {product.interval}
+                </Link>
+              )
+          )}
         </nav>
       )}
       <Footer />
-    </>
+    </div>
   );
 };
 

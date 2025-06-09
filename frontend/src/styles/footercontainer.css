@@ -3,11 +3,74 @@
   bottom: 0;
   left: 0;
   width: 100vw;
-  padding: 1rem 0; /* Ta bort sidopadding för perfekt centrerat innehåll */
+  padding: 1rem 0;
   background-color: #000000;
   color: white;
   text-align: center;
   z-index: 999;
   box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
-  box-sizing: border-box; /* Säkerställer att padding inte lägger till bredd */
+  box-sizing: border-box;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+
+.footer-container.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+
+.footer-container.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.footer-content p {
+  grid-column: 2;
+  margin: 0;
+  text-align: center;
+}
+
+.footer-content button {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.darkmode{
+  margin-right: 50px;
+}
+
+
+
+body {
+  background-color: rgb(134, 250, 254);
+  transition: background-color 1.3s ease, color 1.3s ease;
+}
+
+
+body.dark-mode {
+  background-color: #121212;
+  color: white;
+}
+
+.footer-container {
+  transition: background-color 1.4s ease, color 1.4s ease;
+}
+
+h1 {
+  color: black !important;
+}
+
+
+body.dark-mode h1 {
+  color: white !important;
 }

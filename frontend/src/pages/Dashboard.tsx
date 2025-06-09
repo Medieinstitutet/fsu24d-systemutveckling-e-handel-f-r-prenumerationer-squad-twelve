@@ -5,7 +5,7 @@ import Footer from "./Footer";
 import "../styles/headercontainer.css";
 import { isAuthenticated, getCurrentUser } from "../utils/auth";
 import type { NewsArticle } from "../types/NewsArticle";
-import Modal from "../modals/Modal";
+import Modal from "../modals/CancelModal";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -92,7 +92,6 @@ const Dashboard = () => {
   }, [user]);
 
   const handleCancelSubscription = () => {
-    // Ask for confirmation using modal
     setModalContent({
       title: "Cancel Subscription",
       message: "Are you sure you want to cancel your subscription?",
@@ -122,12 +121,15 @@ const Dashboard = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:3000/auth/cancel-subscription", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        "http://localhost:3000/auth/cancel-subscription",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!res.ok) {
         const err = await res.json();
@@ -142,7 +144,7 @@ const Dashboard = () => {
       }
 
       const data = await res.json();
-      localStorage.setItem("token", data.token); // Update token
+      localStorage.setItem("token", data.token);
       setUser((prev) => (prev ? { ...prev, level: "free" } : null));
 
       setModalContent({
@@ -171,43 +173,56 @@ const Dashboard = () => {
         {error && <p style={{ color: "red" }}>{error}</p>}
         {user ? (
           <>
-            <h1>Welcome, {user.name}!</h1>
-            <p>Email: {user.email}</p>
-            <p>Access Level: {user.level}</p>
-
-            <h2>Your News</h2>
-            {news.length > 0 ? (
-              <ul>
-                {news.map((article) => (
-                  <li key={article.id}>
-                    <h3>{article.title}</h3>
-                    <p>{article.body}</p>
-                    <small>
-                      Level: {article.access_level} | Date:{" "}
-                      {new Date(article.created_at).toLocaleDateString()}
-                    </small>
-                    <hr />
-                  </li>
-                ))}
+            <h1>Dashboard</h1>
+            <section className="user-news-section">
+              <ul className="user-news-list">
+                <li className="user-news-item">
+                  <h3 className="news-title">Welcome, {user.name}!</h3>
+                  <p className="news-snippet">
+                    <strong>Email:</strong> {user.email}
+                  </p>
+                  <p className="news-snippet">
+                    <strong>Access Level:</strong> {user.level}
+                  </p>
+                </li>
               </ul>
-            ) : (
-              <p>No news available for your subscription level.</p>
+            </section>
+            {user && user.level !== "free" && (
+              <button
+                className="cancelSubBtn"
+                onClick={handleCancelSubscription}
+              >
+                Cancel My Subscription
+              </button>
             )}
+
+            <section className="user-news-section">
+              <h2 className="user-news-heading">Your Subscription News</h2>
+              {news.length > 0 ? (
+                <ul className="user-news-list">
+                  {news.map((article) => (
+                    <li key={article.id} className="user-news-item">
+                      <h3 className="news-title">{article.title}</h3>
+                      <p className="news-snippet">{article.body}</p>
+                      <small>
+                        Level: {article.access_level} | Date:{" "}
+                        {new Date(article.created_at).toLocaleDateString()}
+                      </small>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No additional news available for your subscription level.</p>
+              )}
+            </section>
           </>
         ) : (
           <p>Loading user...</p>
         )}
       </div>
 
-      {user && user.level !== "free" && (
-        <button className="cancelSubBtn" onClick={handleCancelSubscription}>
-          Cancel My Subscription
-        </button>
-      )}
-
       <Footer />
 
-      {/* Show modal if needed */}
       {showModal && modalContent && <Modal {...modalContent} />}
     </>
   );
