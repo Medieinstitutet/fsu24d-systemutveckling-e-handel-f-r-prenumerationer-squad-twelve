@@ -47,7 +47,7 @@ const Header = () => {
   return (
     <div className={`header-container${hidden ? " hidden" : ""}`}>
       <nav className="NavBar">
-        <h1>The Daily Dose</h1>
+        <h1 className="header-h1">The Daily Dose</h1>
         <Link to="/" className="home">
           Home
         </Link>

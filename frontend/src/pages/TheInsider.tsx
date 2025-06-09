@@ -91,7 +91,7 @@ const TheInsider = () => {
           fingertips.
         </p>
 
-        <p>$300 Access all news plus exclusive content only for insiders.</p>
+        <p className="light">$300 Access all news plus exclusive content only for insiders.</p>
 
         {canBuy ? (
           <button onClick={handleBuyNow}>Buy Now</button>

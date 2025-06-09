@@ -66,11 +66,20 @@ body.dark-mode {
   transition: background-color 1.4s ease, color 1.4s ease;
 }
 
-h1 {
+h1, .light {
   color: black !important;
 }
 
 
-body.dark-mode h1 {
+body.dark-mode h1{
   color: white !important;
+}
+
+body.dark-mode .light{
+  color: white !important;
+}
+
+
+body.dark-mode .header-h1{
+  color: rgb(0, 0, 0) !important;
 }

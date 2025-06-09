@@ -90,7 +90,7 @@ const TheInformed = () => {
           well-informed decisions in your daily life.
         </p>
 
-        <p>$200 Receive more detailed news and insights.</p>
+        <p className="light">$200 Receive more detailed news and insights.</p>
 
         {canBuy ? (
           <button onClick={handleBuyNow}>Buy Now</button>
