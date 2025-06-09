@@ -108,6 +108,10 @@
   background-color: green;
 }
 
+.cancelSubBtn{
+  background-color: #360101;
+}
+
 @media (max-width: 600px) {
   .navcontainer {
     flex-direction: column;

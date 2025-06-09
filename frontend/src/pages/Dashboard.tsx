@@ -6,6 +6,7 @@ import "../styles/headercontainer.css";
 import { isAuthenticated, getCurrentUser } from "../utils/auth";
 import type { NewsArticle } from "../types/NewsArticle";
 import Modal from "../modals/CancelModal";
+import BuyNowButtons from "../components/BuyNowButtons";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -185,9 +186,9 @@ const Dashboard = () => {
                     <strong>Access Level:</strong> {user.level}
                   </p>
                 </li>
+                <BuyNowButtons />
               </ul>
-            </section>
-            {user && user.level !== "free" && (
+               {user && user.level !== "free" && (
               <button
                 className="cancelSubBtn"
                 onClick={handleCancelSubscription}
@@ -195,6 +196,8 @@ const Dashboard = () => {
                 Cancel My Subscription
               </button>
             )}
+            </section>
+           
 
             <section className="user-news-section">
               <h2 className="user-news-heading">Your Subscription News</h2>

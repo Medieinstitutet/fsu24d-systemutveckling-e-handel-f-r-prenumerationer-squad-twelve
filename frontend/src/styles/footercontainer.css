@@ -10,7 +10,7 @@
   z-index: 999;
   box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: opacity 1.5s ease, visibility 0.1s ease !important;
 }
 
 
