@@ -1,14 +1,8 @@
 import React from "react";
 import "../styles/modal.css";
+import type { ModalProps } from "../types/modal";
 
-type ModalProps = {
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  onConfirm?: () => void;
-  onCancel?: () => void;
-};
+
 
 const Modal: React.FC<ModalProps> = ({
   title,
