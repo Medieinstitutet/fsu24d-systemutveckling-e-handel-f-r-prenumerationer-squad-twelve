@@ -90,7 +90,7 @@ const TheCurious = () => {
           delivered regularly so you never miss out on key stories.
         </p>
 
-        <p>$100 Get basic news updates to stay in the loop.</p>
+        <p className="light">$100 Get basic news updates to stay in the loop.</p>
 
         {canBuy ? (
           <button onClick={handleBuyNow}>Buy Now</button>

@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-
-interface Product {
-  tier: string;
-  productId: string;
-  priceId: string;
-  interval: string;
-  price: number;
-  displayPrice: string;
-  displayName: string;
-}
+import type { Product } from "../types/PlanSelector";
 
 const PlanSelector = () => {
   const navigate = useNavigate();
@@ -20,7 +11,9 @@ const PlanSelector = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:3000/subscription/products");
+        const response = await fetch(
+          "http://localhost:3000/subscription/products"
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch products");
@@ -52,7 +45,12 @@ const PlanSelector = () => {
   return (
     <select onChange={handleChange} value={location.pathname}>
       {products.map((product) => (
-        <option key={product.tier} value={`/The${product.tier.charAt(0).toUpperCase() + product.tier.slice(1)}`}>
+        <option
+          key={product.tier}
+          value={`/The${
+            product.tier.charAt(0).toUpperCase() + product.tier.slice(1)
+          }`}
+        >
           {product.displayName} - {product.displayPrice}/{product.interval}
         </option>
       ))}

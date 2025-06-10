@@ -15,7 +15,6 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-
   const searchParams = new URLSearchParams(location.search);
   const message = searchParams.get("message");
 
@@ -70,7 +69,7 @@ const Login = () => {
       <div className="main-container">
         <h1>Login</h1>
 
-        {message && <p style={{ color: "white" }}>{message}</p>}
+        {message && <p className="need">{message}</p>}
 
         <form className="loginform" onSubmit={handleSubmit}>
           <label>

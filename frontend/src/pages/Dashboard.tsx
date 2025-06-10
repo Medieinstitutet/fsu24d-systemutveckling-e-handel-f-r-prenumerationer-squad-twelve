@@ -5,19 +5,30 @@ import Footer from "./Footer";
 import "../styles/headercontainer.css";
 import { isAuthenticated, getCurrentUser } from "../utils/auth";
 import type { NewsArticle } from "../types/NewsArticle";
-
-
-
+import Modal from "../modals/CancelModal";
+import BuyNowButtons from "../components/BuyNowButtons";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+
   const [user, setUser] = useState<{
     name: string;
     email: string;
     level: string;
   } | null>(null);
+
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [error, setError] = useState("");
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState<{
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+  } | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -81,37 +92,80 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const handleCancelSubscription = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("You must be logged in");
-    return;
-  }
-
-  try {
-    const res = await fetch("http://localhost:3000/auth/cancel-subscription", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
+  const handleCancelSubscription = () => {
+    setModalContent({
+      title: "Cancel Subscription",
+      message: "Are you sure you want to cancel your subscription?",
+      confirmText: "Yes, cancel it",
+      cancelText: "No, keep it",
+      onConfirm: () => {
+        setShowModal(false);
+        confirmCancelSubscription();
       },
+      onCancel: () => setShowModal(false),
     });
+    setShowModal(true);
+  };
 
-    if (!res.ok) {
-      const err = await res.json();
-      alert("Error: " + err.message);
+  const confirmCancelSubscription = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setModalContent({
+        title: "Error",
+        message: "You must be logged in to cancel your subscription.",
+        confirmText: "OK",
+        onConfirm: () => setShowModal(false),
+      });
+      setShowModal(true);
       return;
     }
 
-    const data = await res.json();
-    localStorage.setItem("token", data.token);  // update token with new subscription level
-    alert("Subscription cancelled! You are now on the free plan.");
-    setUser((prev) => (prev ? { ...prev, level: "free" } : null));
-  } catch (error) {
-    alert("Something went wrong.");
-    console.error(error);
-  }
-};
+    try {
+      const res = await fetch(
+        "http://localhost:3000/auth/cancel-subscription",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
+      if (!res.ok) {
+        const err = await res.json();
+        setModalContent({
+          title: "Error",
+          message: err.message || "Could not cancel subscription.",
+          confirmText: "OK",
+          onConfirm: () => setShowModal(false),
+        });
+        setShowModal(true);
+        return;
+      }
+
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+      setUser((prev) => (prev ? { ...prev, level: "free" } : null));
+
+      setModalContent({
+        title: "Subscription Cancelled",
+        message: "You are now on the free plan.",
+        confirmText: "OK",
+        onConfirm: () => setShowModal(false),
+      });
+      setShowModal(true);
+    } catch (error) {
+      console.error(error);
+      setModalContent({
+        title: "Error",
+        message: "Something went wrong. Please try again later.",
+        confirmText: "OK",
+        onConfirm: () => setShowModal(false),
+      });
+      setShowModal(true);
+    }
+  };
 
   return (
     <>
@@ -120,41 +174,59 @@ const Dashboard = () => {
         {error && <p style={{ color: "red" }}>{error}</p>}
         {user ? (
           <>
-            <h1>Welcome, {user.name}!</h1>
-            <p>Email: {user.email}</p>
-            <p>Access Level: {user.level}</p>
-
-            <h2>Your News</h2>
-            {news.length > 0 ? (
-              <ul>
-                {news.map((article) => (
-                  <li key={article.id}>
-                    <h3>{article.title}</h3>
-                    <p>{article.body}</p>
-                    <small>
-                      Level: {article.access_level} | Date:{" "}
-                      {new Date(article.created_at).toLocaleDateString()}
-                    </small>
-                    <hr />
-                  </li>
-                ))}
+            <h1>Dashboard</h1>
+            <section className="user-news-section">
+              <ul className="user-news-list">
+                <li className="user-news-item">
+                  <h3 className="news-title">Welcome, {user.name}!</h3>
+                  <p className="news-snippet">
+                    <strong>Email:</strong> {user.email}
+                  </p>
+                  <p className="news-snippet">
+                    <strong>Access Level:</strong> {user.level}
+                  </p>
+                </li>
+                <BuyNowButtons />
               </ul>
-            ) : (
-              <p>No news available for your subscription level.</p>
+               {user && user.level !== "free" && (
+              <button
+                className="cancelSubBtn"
+                onClick={handleCancelSubscription}
+              >
+                Cancel My Subscription
+              </button>
             )}
+            </section>
+           
+
+            <section className="user-news-section">
+              <h2 className="user-news-heading">Your Subscription News</h2>
+              {news.length > 0 ? (
+                <ul className="user-news-list">
+                  {news.map((article) => (
+                    <li key={article.id} className="user-news-item">
+                      <h3 className="news-title">{article.title}</h3>
+                      <p className="news-snippet">{article.body}</p>
+                      <small>
+                        Level: {article.access_level} | Date:{" "}
+                        {new Date(article.created_at).toLocaleDateString()}
+                      </small>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No additional news available for your subscription level.</p>
+              )}
+            </section>
           </>
         ) : (
           <p>Loading user...</p>
         )}
       </div>
 
-      {user && user.level !== "free" && (
-        <button onClick={handleCancelSubscription}>
-          Cancel My Subscription
-        </button>
-      )}
-
       <Footer />
+
+      {showModal && modalContent && <Modal {...modalContent} />}
     </>
   );
 };
