@@ -40,7 +40,7 @@
   color: #bb86fc !important;
 }
 
-.dashboard-link{
+.dashboard-link {
   color: #bb86fc !important;
 }
 
@@ -49,14 +49,14 @@
   color: #bb86fc !important;
 }
 
-.darkmode{
+.darkmode {
   color: #bb86fc !important;
 }
-
 
 .buy-now-wrapper {
   max-width: 1080px;
   margin: 2rem auto;
+  margin-top: calc(40vh - 200px);
   padding: 2rem;
   background-color: #121212;
   border-radius: 12px;
@@ -92,6 +92,6 @@
   border: 1px solid #333;
 }
 
-.home-description{
+.home-description {
   border: none !important;
 }
