@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -7,6 +7,7 @@ import { isAuthenticated, getCurrentUser } from "../utils/auth";
 import type { NewsArticle } from "../types/NewsArticle";
 import Modal from "../modals/CancelModal";
 import BuyNowButtons from "../components/BuyNowButtons";
+import ArticleModal from "../modals/ArticleModal";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -29,6 +30,16 @@ const Dashboard = () => {
     onConfirm?: () => void;
     onCancel?: () => void;
   } | null>(null);
+
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(
+    null
+  );
+  const [showReadMoreButton, setShowReadMoreButton] = useState<
+    Map<number, boolean>
+  >(new Map());
+  const snippetRefs = useRef<Map<number, HTMLParagraphElement | null>>(
+    new Map()
+  );
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -91,6 +102,26 @@ const Dashboard = () => {
       fetchNews();
     }
   }, [user]);
+
+  useEffect(() => {
+    const newShowButtonMap = new Map<number, boolean>();
+    news.forEach((article) => {
+      const snippetElement = snippetRefs.current.get(article.id);
+      if (snippetElement) {
+        const isOverflowing = snippetElement.scrollHeight > 72;
+        newShowButtonMap.set(article.id, isOverflowing);
+      }
+    });
+    setShowReadMoreButton(newShowButtonMap);
+  }, [news]);
+
+  const openArticleModal = (article: NewsArticle) => {
+    setSelectedArticle(article);
+  };
+
+  const closeArticleModal = () => {
+    setSelectedArticle(null);
+  };
 
   const handleCancelSubscription = () => {
     setModalContent({
@@ -188,16 +219,15 @@ const Dashboard = () => {
                 </li>
                 <BuyNowButtons />
               </ul>
-               {user && user.level !== "free" && (
-              <button
-                className="cancelSubBtn"
-                onClick={handleCancelSubscription}
-              >
-                Cancel My Subscription
-              </button>
-            )}
+              {user && user.level !== "free" && (
+                <button
+                  className="cancelSubBtn"
+                  onClick={handleCancelSubscription}
+                >
+                  Cancel My Subscription
+                </button>
+              )}
             </section>
-           
 
             <section className="user-news-section">
               <h2 className="user-news-heading">Your Subscription News</h2>
@@ -206,11 +236,28 @@ const Dashboard = () => {
                   {news.map((article) => (
                     <li key={article.id} className="user-news-item">
                       <h3 className="news-title">{article.title}</h3>
-                      <p className="news-snippet">{article.body}</p>
-                      <small>
-                        Level: {article.access_level} | Date:{" "}
-                        {new Date(article.created_at).toLocaleDateString()}
-                      </small>
+                      <p
+                        ref={(el: HTMLParagraphElement | null) => {
+                          snippetRefs.current.set(article.id, el);
+                        }}
+                        className="news-snippet"
+                      >
+                        {article.body}
+                      </p>
+                      <div className="news-info-row">
+                        <small>
+                          Level: {article.access_level} | Date:{" "}
+                          {new Date(article.created_at).toLocaleDateString()}
+                        </small>
+                        {showReadMoreButton.get(article.id) && (
+                          <button
+                            onClick={() => openArticleModal(article)}
+                            className="read-more-button"
+                          >
+                            Läs mer
+                          </button>
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -227,6 +274,9 @@ const Dashboard = () => {
       <Footer />
 
       {showModal && modalContent && <Modal {...modalContent} />}
+      {selectedArticle && (
+        <ArticleModal article={selectedArticle} onClose={closeArticleModal} />
+      )}
     </>
   );
 };

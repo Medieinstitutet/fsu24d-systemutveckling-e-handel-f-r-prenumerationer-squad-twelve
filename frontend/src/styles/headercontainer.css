@@ -60,7 +60,7 @@
   padding: 2rem;
   background-color: #121212;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.05);
+  box-shadow: 0px 0px 10px 0.1px #bb86fc;
   color: #f0f0f0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }

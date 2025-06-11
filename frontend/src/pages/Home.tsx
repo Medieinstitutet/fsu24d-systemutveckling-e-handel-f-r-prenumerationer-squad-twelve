@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import BuyNow from "./BuyNow";
@@ -9,6 +9,7 @@ import "../styles/home.css";
 import { isAuthenticated, getCurrentUser } from "../utils/auth";
 import type { NewsArticle } from "../types/NewsArticle";
 import BuyNowButtons from "../components/BuyNowButtons";
+import ArticleModal from "../modals/ArticleModal"; 
 
 const freeNews = [
   {
@@ -37,6 +38,15 @@ const Home = () => {
 
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [error, setError] = useState("");
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(
+    null
+  );
+  const [showReadMoreButton, setShowReadMoreButton] = useState<
+    Map<number, boolean>
+  >(new Map());
+  const snippetRefs = useRef<Map<number, HTMLParagraphElement | null>>(
+    new Map()
+  );
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -86,6 +96,26 @@ const Home = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    const newShowButtonMap = new Map<number, boolean>();
+    news.forEach((article) => {
+      const snippetElement = snippetRefs.current.get(article.id);
+      if (snippetElement) {
+        const isOverflowing = snippetElement.scrollHeight > 72;
+        newShowButtonMap.set(article.id, isOverflowing);
+      }
+    });
+    setShowReadMoreButton(newShowButtonMap);
+  }, [news]);
+
+  const openModal = (article: NewsArticle) => {
+    setSelectedArticle(article);
+  };
+
+  const closeModal = () => {
+    setSelectedArticle(null);
+  };
+
   return (
     <>
       <Header />
@@ -118,11 +148,29 @@ const Home = () => {
                 {news.map((article) => (
                   <li key={article.id} className="user-news-item">
                     <h3 className="news-title">{article.title}</h3>
-                    <p className="news-snippet">{article.body}</p>
-                    <small>
-                      Level: {article.access_level} | Date:{" "}
-                      {new Date(article.created_at).toLocaleDateString()}
-                    </small>
+
+                    <p
+                      ref={(el: HTMLParagraphElement | null) => {
+                        snippetRefs.current.set(article.id, el);
+                      }}
+                      className="news-snippet"
+                    >
+                      {article.body}
+                    </p>
+                    <div className="news-info-row">
+                      <small>
+                        Level: {article.access_level} | Date:{" "}
+                        {new Date(article.created_at).toLocaleDateString()}
+                      </small>
+                      {showReadMoreButton.get(article.id) && (
+                        <button
+                          onClick={() => openModal(article)}
+                          className="read-more-button"
+                        >
+                          Läs mer
+                        </button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -140,6 +188,7 @@ const Home = () => {
         </section>
       </div>
       <Footer />
+      <ArticleModal article={selectedArticle} onClose={closeModal} />
     </>
   );
 };
