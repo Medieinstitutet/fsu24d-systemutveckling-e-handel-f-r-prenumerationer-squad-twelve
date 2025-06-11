@@ -10,9 +10,8 @@
   z-index: 999;
   box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
-  transition: opacity 1.5s ease, visibility 0.s ease !important;
+  transition: opacity 1.5s ease, visibility 0s ease !important;
 }
-
 
 .footer-container.hidden {
   opacity: 0;
@@ -20,13 +19,11 @@
   pointer-events: none;
 }
 
-
 .footer-container.visible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
 }
-
 
 .footer-content {
   display: grid;
@@ -45,17 +42,14 @@
   justify-self: end;
 }
 
-.darkmode{
+.darkmode {
   margin-right: 50px;
 }
-
-
 
 body {
   background-color: rgb(134, 250, 254);
   transition: background-color 1.3s ease, color 1.3s ease;
 }
-
 
 body.dark-mode {
   background-color: #121212;
@@ -66,29 +60,55 @@ body.dark-mode {
   transition: background-color 1.4s ease, color 1.4s ease;
 }
 
-h1, .light {
+h1,
+.light {
   color: black !important;
 }
 
-
-body.dark-mode h1{
+body.dark-mode h1 {
   color: white !important;
 }
 
-body.dark-mode .light{
+body.dark-mode .light {
   color: white !important;
 }
 
-
-body.dark-mode .header-h1{
+body.dark-mode .header-h1 {
   color: rgb(0, 0, 0) !important;
 }
 
-.need{
+.need {
   color: rgb(0, 0, 0);
 }
 
-
-body.dark-mode .need{
+body.dark-mode .need {
   color: rgb(255, 255, 255) !important;
+}
+
+/* Dark mode for Admin Page */
+.content-item {
+  background-color: white;
+  color: black;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+body.dark-mode .content-item {
+  background-color: #1e1e1e;
+  color: white;
+}
+
+body.dark-mode .content-item h3,
+body.dark-mode .content-item p,
+body.dark-mode .content-item small {
+  color: white;
+}
+
+body.dark-mode .content-item button {
+  background-color: #2c2c2c;
+  color: white;
+  border: 1px solid white;
+}
+
+body.dark-mode .content-item button:hover {
+  background-color: #444;
 }

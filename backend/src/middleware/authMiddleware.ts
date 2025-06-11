@@ -8,6 +8,8 @@ interface AuthPayload {
   id: number;
   email: string;
   level: string;
+  role: string;
+  subscription_status: string;
 }
 
 // Augment Express' Request interface globally
@@ -45,4 +47,16 @@ export const requireAuth = (
   } catch (err) {
     res.status(403).json({ message: 'Token verification failed' });
   }
+};
+
+export const isAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user || req.user.role !== 'admin') {
+    res.status(403).json({ message: 'Admin access required' });
+    return;
+  }
+  next();
 };

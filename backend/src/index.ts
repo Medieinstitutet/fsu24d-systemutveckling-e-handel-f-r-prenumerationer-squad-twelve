@@ -5,6 +5,7 @@ import authRoutes from './routes/auth';
 import protectedRoutes from './routes/protected';
 import subscriptionRoutes from './routes/subscription';
 import contentRoutes from './routes/content';
+import adminRoutes from './routes/admin';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use('/auth', authRoutes);
 app.use('/protected', protectedRoutes);
 app.use('/subscription', subscriptionRoutes);
 app.use('/content', contentRoutes);
+app.use('/admin', adminRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

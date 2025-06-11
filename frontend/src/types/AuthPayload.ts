@@ -3,9 +3,12 @@ export interface AuthPayload {
   name: string;
   email: string;
   level: string;
+  role: string;
+  subscription_status: string;
   exp?: number;
   iat?: number;
 }
-/* iat = issued at 
+/* 
+  iat = issued at 
   exp = expiration
 */
