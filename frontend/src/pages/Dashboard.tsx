@@ -218,7 +218,8 @@ const Dashboard = () => {
                 {user?.subscription_status === 'failed' && (
                   <div
                     style={{
-                      backgroundColor: '#fee',
+                      backgroundColor: 'black',
+                      color: 'white',
                       padding: '1rem',
                       borderRadius: '8px',
                       marginTop: '1rem',

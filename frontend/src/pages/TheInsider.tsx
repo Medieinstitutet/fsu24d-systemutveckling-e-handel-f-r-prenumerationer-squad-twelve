@@ -132,15 +132,15 @@ const TheInsider = () => {
         {canBuy ? (
           <button onClick={handleBuyNow}>Buy Now</button>
         ) : (
-          <p>You already have this plan.</p>
+          <p className="light">You already have this plan.</p>
         )}
 
-        <hr />
+        
 
-        <h2>Exclusive Content</h2>
+        <h2 className="light">Exclusive Content</h2>
         {locked ? (
           <div
-            style={{ background: '#fee', padding: '1rem', borderRadius: '8px' }}
+            style={{ background: 'black', padding: '1rem', borderRadius: '8px' }}
           >
             <p>
               This content is for <strong>Insider</strong> subscribers only.

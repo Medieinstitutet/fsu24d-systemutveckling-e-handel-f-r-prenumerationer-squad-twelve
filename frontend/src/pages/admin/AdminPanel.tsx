@@ -169,7 +169,7 @@ const AdminPanel: React.FC = () => {
         </form>
 
         <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="sort">Sort by: </label>
+          <label className="light" htmlFor="sort">Sort by: </label>
           <select
             id="sort"
             value={sortMode}
