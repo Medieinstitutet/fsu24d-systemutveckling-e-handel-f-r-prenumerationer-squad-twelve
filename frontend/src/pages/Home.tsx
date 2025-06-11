@@ -9,7 +9,7 @@ import '../styles/home.css';
 import { isAuthenticated, getCurrentUser } from '../utils/auth';
 import type { NewsArticle } from '../types/NewsArticle';
 import BuyNowButtons from '../components/BuyNowButtons';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 const freeNews = [
   {
@@ -30,7 +30,7 @@ const freeNews = [
 ];
 
 const Home = () => {
-  const navigate = useNavigate(); // For redirecting admin from / to /admin instead
+  // const navigate = useNavigate(); // For redirecting admin from / to /admin instead
 
   const [user, setUser] = useState<{
     name: string;
@@ -47,10 +47,10 @@ const Home = () => {
       const currentUser = getCurrentUser();
 
       // Redirect admin to /admin instead
-      if (currentUser?.role === 'admin') {
-        navigate('/admin');
-        return;
-      }
+      // if (currentUser?.role === 'admin') {
+      //   navigate('/admin');
+      //   return;
+      // }
 
       if (currentUser) {
         setUser({
@@ -62,7 +62,7 @@ const Home = () => {
         setError('Could not load user info.');
       }
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     const fetchNews = async () => {
