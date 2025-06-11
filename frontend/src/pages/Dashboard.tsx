@@ -1,25 +1,23 @@
-import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import Header from "./Header";
-import Footer from "./Footer";
-import "../styles/headercontainer.css";
-import { isAuthenticated, getCurrentUser } from "../utils/auth";
-import type { NewsArticle } from "../types/NewsArticle";
-import Modal from "../modals/CancelModal";
-import BuyNowButtons from "../components/BuyNowButtons";
-import ArticleModal from "../modals/ArticleModal";
+// unchanged imports
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Header from './Header';
+import Footer from './Footer';
+import '../styles/headercontainer.css';
+import { isAuthenticated, getCurrentUser } from '../utils/auth';
+import type { NewsArticle } from '../types/NewsArticle';
+import Modal from '../modals/CancelModal';
+import BuyNowButtons from '../components/BuyNowButtons';
+import type { AuthPayload } from '../types/AuthPayload';
+import ArticleModal from '../modals/ArticleModal';
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<{
-    name: string;
-    email: string;
-    level: string;
-  } | null>(null);
+  const [user, setUser] = useState<AuthPayload | null>(null);
 
   const [news, setNews] = useState<NewsArticle[]>([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState<{
@@ -43,62 +41,61 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      console.log("User is NOT authenticated, redirecting to login.");
-      navigate("/login");
+      console.log('User is NOT authenticated, redirecting to login.');
+      navigate('/login');
       return;
     }
 
     const currentUser = getCurrentUser();
     if (currentUser) {
-      console.log("Loaded current user:", currentUser);
-      setUser({
-        name: currentUser.name,
-        email: currentUser.email,
-        level: currentUser.level,
-      });
+      console.log('Loaded current user:', currentUser);
+
+      // If admin → redirect to admin panel
+      if (currentUser.role === 'admin') {
+        navigate('/admin');
+        return;
+      }
+
+      setUser(currentUser);
     } else {
-      console.error("Could not load user info from token.");
-      setError("Could not load user info.");
+      console.error('Could not load user info from token.');
+      setError('Could not load user info.');
     }
   }, [navigate]);
 
+  // ✅ Fetch filtered news from backend
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const token = localStorage.getItem("token");
-        console.log("Fetching news with token:", token);
-
+        const token = localStorage.getItem('token');
         if (!token) {
-          setError("No auth token found.");
+          setError('No auth token found.');
           return;
         }
 
-        const response = await fetch("http://localhost:3000/auth/news", {
+        const response = await fetch('http://localhost:3000/auth/news', {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         });
 
-        console.log("Fetch news response status:", response.status);
-
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("Fetch news failed:", errorText);
+          console.error('Fetch news failed:', errorText);
           throw new Error(`Failed to fetch news, status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log("Fetched news data:", data);
+        console.log('Fetched news data:', data);
         setNews(data);
       } catch (err) {
-        console.error("Error fetching news:", err);
-        setError("Could not fetch news.");
+        console.error('Error fetching news:', err);
+        setError('Could not fetch news.');
       }
     };
 
     if (user) {
-      console.log("User loaded, fetching news...");
       fetchNews();
     }
   }, [user]);
@@ -125,10 +122,10 @@ const Dashboard = () => {
 
   const handleCancelSubscription = () => {
     setModalContent({
-      title: "Cancel Subscription",
-      message: "Are you sure you want to cancel your subscription?",
-      confirmText: "Yes, cancel it",
-      cancelText: "No, keep it",
+      title: 'Cancel Subscription',
+      message: 'Are you sure you want to cancel your subscription?',
+      confirmText: 'Yes, cancel it',
+      cancelText: 'No, keep it',
       onConfirm: () => {
         setShowModal(false);
         confirmCancelSubscription();
@@ -139,13 +136,13 @@ const Dashboard = () => {
   };
 
   const confirmCancelSubscription = async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
 
     if (!token) {
       setModalContent({
-        title: "Error",
-        message: "You must be logged in to cancel your subscription.",
-        confirmText: "OK",
+        title: 'Error',
+        message: 'You must be logged in to cancel your subscription.',
+        confirmText: 'OK',
         onConfirm: () => setShowModal(false),
       });
       setShowModal(true);
@@ -154,9 +151,9 @@ const Dashboard = () => {
 
     try {
       const res = await fetch(
-        "http://localhost:3000/auth/cancel-subscription",
+        'http://localhost:3000/auth/cancel-subscription',
         {
-          method: "POST",
+          method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -166,9 +163,9 @@ const Dashboard = () => {
       if (!res.ok) {
         const err = await res.json();
         setModalContent({
-          title: "Error",
-          message: err.message || "Could not cancel subscription.",
-          confirmText: "OK",
+          title: 'Error',
+          message: err.message || 'Could not cancel subscription.',
+          confirmText: 'OK',
           onConfirm: () => setShowModal(false),
         });
         setShowModal(true);
@@ -176,22 +173,22 @@ const Dashboard = () => {
       }
 
       const data = await res.json();
-      localStorage.setItem("token", data.token);
-      setUser((prev) => (prev ? { ...prev, level: "free" } : null));
+      localStorage.setItem('token', data.token);
+      setUser((prev) => (prev ? { ...prev, level: 'free' } : null));
 
       setModalContent({
-        title: "Subscription Cancelled",
-        message: "You are now on the free plan.",
-        confirmText: "OK",
+        title: 'Subscription Cancelled',
+        message: 'You are now on the free plan.',
+        confirmText: 'OK',
         onConfirm: () => setShowModal(false),
       });
       setShowModal(true);
     } catch (error) {
       console.error(error);
       setModalContent({
-        title: "Error",
-        message: "Something went wrong. Please try again later.",
-        confirmText: "OK",
+        title: 'Error',
+        message: 'Something went wrong. Please try again later.',
+        confirmText: 'OK',
         onConfirm: () => setShowModal(false),
       });
       setShowModal(true);
@@ -202,7 +199,7 @@ const Dashboard = () => {
     <>
       <Header />
       <div className="main-container">
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
         {user ? (
           <>
             <h1>Dashboard</h1>
@@ -218,8 +215,55 @@ const Dashboard = () => {
                   </p>
                 </li>
                 <BuyNowButtons />
+                {user?.subscription_status === 'failed' && (
+                  <div
+                    style={{
+                      backgroundColor: '#fee',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      marginTop: '1rem',
+                    }}
+                  >
+                    <p>
+                      Your payment failed. Please retry to keep your
+                      subscription active.
+                    </p>
+                    <button
+                      onClick={async () => {
+                        const token = localStorage.getItem('token');
+                        try {
+                          const res = await fetch(
+                            'http://localhost:3000/subscription/create-checkout',
+                            {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${token}`,
+                              },
+                              body: JSON.stringify({ tier: user.level }),
+                            }
+                          );
+
+                          if (!res.ok)
+                            throw new Error(
+                              'Failed to create checkout session'
+                            );
+                          const { url } = await res.json();
+                          window.location.href = url;
+                        } catch (err) {
+                          alert(
+                            'Could not retry payment. Please try again later.'
+                          );
+                          console.error('Retry failed:', err);
+                        }
+                      }}
+                    >
+                      Retry Payment
+                    </button>
+                  </div>
+                )}
               </ul>
-              {user && user.level !== "free" && (
+              {user && user.level !== 'free' && (
                 <button
                   className="cancelSubBtn"
                   onClick={handleCancelSubscription}
@@ -246,7 +290,7 @@ const Dashboard = () => {
                       </p>
                       <div className="news-info-row">
                         <small>
-                          Level: {article.access_level} | Date:{" "}
+                          Level: {article.access_level} | Date:{' '}
                           {new Date(article.created_at).toLocaleDateString()}
                         </small>
                         {showReadMoreButton.get(article.id) && (

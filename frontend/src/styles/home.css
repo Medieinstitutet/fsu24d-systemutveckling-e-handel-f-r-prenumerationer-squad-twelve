@@ -1,4 +1,6 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -11,7 +13,6 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   letter-spacing: 0.05em;
 }
-
 
 .free-news-section,
 .user-news-section {
@@ -71,7 +72,7 @@
   margin-top: 10px;
   text-align: center;
   justify-content: center;
-  padding:0px 60px 0px 60px;
+  padding: 0px 60px 0px 60px;
   max-height: 4.5em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -94,7 +95,6 @@
   line-height: 1.6;
 }
 
-
 .user-info-section {
   margin-bottom: 2rem;
   background-color: #f9f9f9;
@@ -115,9 +115,6 @@
   margin: 0.25rem 0;
 }
 
-
-
-
 .news-info-row {
   display: flex;
   align-items: center;
@@ -126,9 +123,8 @@
 }
 
 .news-info-row small {
-  margin: 0; 
+  margin: 0;
 }
-
 
 .read-more-button {
   background-color: #bb86fc;

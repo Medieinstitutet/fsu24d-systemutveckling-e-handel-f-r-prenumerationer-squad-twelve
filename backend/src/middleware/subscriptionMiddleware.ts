@@ -1,30 +1,46 @@
 import { Request, Response, NextFunction } from 'express';
 
 const subscriptionLevels = {
-  'not_subscribed': 0,
-  'curious': 1,
-  'informed': 2,
-  'insider': 3
+  free: 0,
+  curious: 1,
+  informed: 2,
+  insider: 3,
 };
 
 type SubscriptionLevel = keyof typeof subscriptionLevels;
 
 export const requireSubscriptionLevel = (requiredLevel: SubscriptionLevel) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     if (!req.user) {
       res.status(401).json({ message: 'Authentication required' });
       return;
     }
 
+    // If the user's subscription is failed, restrict access completely
+    if (req.user.subscription_status === 'failed') {
+      res
+        .status(403)
+        .json({
+          message:
+            'Your subscription payment failed. Please retry to regain access.',
+        });
+      return;
+    }
+
+    // Allow access if user level is equal to or higher than required
     const userLevel = req.user.level as SubscriptionLevel;
     const userSubscriptionValue = subscriptionLevels[userLevel] || 0;
     const requiredSubscriptionValue = subscriptionLevels[requiredLevel];
 
     if (userSubscriptionValue < requiredSubscriptionValue) {
-      res.status(403).json({ 
+      res.status(403).json({
         message: `This content requires ${requiredLevel} subscription or higher`,
         currentLevel: userLevel,
-        requiredLevel: requiredLevel
+        requiredLevel: requiredLevel,
       });
       return;
     }
