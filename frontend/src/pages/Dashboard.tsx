@@ -1,5 +1,5 @@
 // unchanged imports
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
@@ -9,6 +9,7 @@ import type { NewsArticle } from '../types/NewsArticle';
 import Modal from '../modals/CancelModal';
 import BuyNowButtons from '../components/BuyNowButtons';
 import type { AuthPayload } from '../types/AuthPayload';
+import ArticleModal from '../modals/ArticleModal';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -28,7 +29,16 @@ const Dashboard = () => {
     onCancel?: () => void;
   } | null>(null);
 
-  // ✅ Get user from token
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(
+    null
+  );
+  const [showReadMoreButton, setShowReadMoreButton] = useState<
+    Map<number, boolean>
+  >(new Map());
+  const snippetRefs = useRef<Map<number, HTMLParagraphElement | null>>(
+    new Map()
+  );
+
   useEffect(() => {
     if (!isAuthenticated()) {
       console.log('User is NOT authenticated, redirecting to login.');
@@ -89,6 +99,26 @@ const Dashboard = () => {
       fetchNews();
     }
   }, [user]);
+
+  useEffect(() => {
+    const newShowButtonMap = new Map<number, boolean>();
+    news.forEach((article) => {
+      const snippetElement = snippetRefs.current.get(article.id);
+      if (snippetElement) {
+        const isOverflowing = snippetElement.scrollHeight > 72;
+        newShowButtonMap.set(article.id, isOverflowing);
+      }
+    });
+    setShowReadMoreButton(newShowButtonMap);
+  }, [news]);
+
+  const openArticleModal = (article: NewsArticle) => {
+    setSelectedArticle(article);
+  };
+
+  const closeArticleModal = () => {
+    setSelectedArticle(null);
+  };
 
   const handleCancelSubscription = () => {
     setModalContent({
@@ -233,7 +263,6 @@ const Dashboard = () => {
                   </div>
                 )}
               </ul>
-
               {user && user.level !== 'free' && (
                 <button
                   className="cancelSubBtn"
@@ -251,11 +280,28 @@ const Dashboard = () => {
                   {news.map((article) => (
                     <li key={article.id} className="user-news-item">
                       <h3 className="news-title">{article.title}</h3>
-                      <p className="news-snippet">{article.body}</p>
-                      <small>
-                        Level: {article.access_level} | Date:{' '}
-                        {new Date(article.created_at).toLocaleDateString()}
-                      </small>
+                      <p
+                        ref={(el: HTMLParagraphElement | null) => {
+                          snippetRefs.current.set(article.id, el);
+                        }}
+                        className="news-snippet"
+                      >
+                        {article.body}
+                      </p>
+                      <div className="news-info-row">
+                        <small>
+                          Level: {article.access_level} | Date:{' '}
+                          {new Date(article.created_at).toLocaleDateString()}
+                        </small>
+                        {showReadMoreButton.get(article.id) && (
+                          <button
+                            onClick={() => openArticleModal(article)}
+                            className="read-more-button"
+                          >
+                            Läs mer
+                          </button>
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -272,6 +318,9 @@ const Dashboard = () => {
       <Footer />
 
       {showModal && modalContent && <Modal {...modalContent} />}
+      {selectedArticle && (
+        <ArticleModal article={selectedArticle} onClose={closeArticleModal} />
+      )}
     </>
   );
 };
