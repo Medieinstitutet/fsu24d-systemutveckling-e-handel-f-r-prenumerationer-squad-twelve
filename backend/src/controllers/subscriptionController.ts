@@ -322,7 +322,9 @@ export const verifySession = async (req: Request, res: Response): Promise<void> 
     
     const tier = session.metadata?.tier;
     const userId = session.metadata?.userId;
-    const subscriptionId = session.subscription?.toString();
+    const subscriptionId = typeof session.subscription === 'string' 
+      ? session.subscription 
+      : session.subscription?.id;
     
     if (tier && userId && subscriptionId) {
       if (!['free', 'curious', 'informed', 'insider'].includes(tier)) {
@@ -455,5 +457,72 @@ export const updateProductMetadata = async (req: Request, res: Response): Promis
   } catch (error) {
     console.error('Error updating product metadata:', error);
     res.status(500).json({ message: 'Failed to update product metadata' });
+  }
+};
+
+export const checkSubscriptionStatus = async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: 'Authentication required' });
+    return;
+  }
+
+  try {
+    const [userRows] = await db.query(
+      'SELECT stripe_subscription_id, stripe_customer_id, name FROM users WHERE id = ?', 
+      [req.user.id]
+    );
+    
+    const user = (userRows as any[])[0];
+    if (!user || !user.stripe_subscription_id) {
+      res.json({ 
+        isActive: false,
+        status: 'no_subscription',
+        message: 'No active subscription found'
+      });
+      return;
+    }
+
+    const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id);
+    
+    const isActive = subscription.status === 'active';
+    
+    if (subscription.status !== 'active' && req.user.subscription_status === 'active') {
+      await db.query(
+        'UPDATE users SET subscription_status = ? WHERE id = ?',
+        [subscription.status, req.user.id]
+      );
+      
+      await db.query(
+        'UPDATE subscriptions SET status = ? WHERE user_id = ? AND stripe_subscription_id = ?',
+        [subscription.status, req.user.id, user.stripe_subscription_id]
+      );
+    }
+    
+    const token = jwt.sign(
+      {
+        id: req.user.id,
+        name: user.name,
+        email: req.user.email,
+        level: req.user.level,
+        role: req.user.role,
+        subscription_status: subscription.status
+      },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '6h' }
+    );
+
+    const currentPeriodEnd = (subscription as any).current_period_end
+      ? new Date((subscription as any).current_period_end * 1000)
+      : null;
+
+    res.json({
+      isActive,
+      status: subscription.status,
+      currentPeriodEnd,
+      token
+    });
+  } catch (error) {
+    console.error('Error checking subscription status:', error);
+    res.status(500).json({ message: 'Failed to check subscription status' });
   }
 };

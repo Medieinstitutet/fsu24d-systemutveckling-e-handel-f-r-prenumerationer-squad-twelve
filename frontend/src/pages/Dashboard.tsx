@@ -135,6 +135,45 @@ const Dashboard = () => {
     setShowModal(true);
   };
 
+  const checkSubscriptionStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(
+        'http://localhost:3000/subscription/check-status',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          setUser(getCurrentUser());
+        }
+
+        if (data.status === 'canceled' && data.currentPeriodEnd) {
+          setModalContent({
+            title: 'Subscription Status',
+            message: `Your subscription is cancelled and will end on ${new Date(
+              data.currentPeriodEnd
+            ).toLocaleDateString()}.`,
+            confirmText: 'OK',
+            onConfirm: () => setShowModal(false),
+          });
+          setShowModal(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+    }
+  };
+
   const confirmCancelSubscription = async () => {
     const token = localStorage.getItem('token');
 
@@ -174,11 +213,16 @@ const Dashboard = () => {
 
       const data = await res.json();
       localStorage.setItem('token', data.token);
-      setUser((prev) => (prev ? { ...prev, level: 'free' } : null));
+      setUser((prev) =>
+        prev ? { ...prev, subscription_status: 'cancelled' } : null
+      );
+
+      await checkSubscriptionStatus();
 
       setModalContent({
         title: 'Subscription Cancelled',
-        message: 'You are now on the free plan.',
+        message:
+          'Your subscription has been cancelled and will remain active until the end of your current billing period.',
         confirmText: 'OK',
         onConfirm: () => setShowModal(false),
       });
@@ -194,6 +238,12 @@ const Dashboard = () => {
       setShowModal(true);
     }
   };
+
+  useEffect(() => {
+    if (user && user.subscription_status === 'cancelled') {
+      checkSubscriptionStatus();
+    }
+  }, [user]);
 
   return (
     <>
