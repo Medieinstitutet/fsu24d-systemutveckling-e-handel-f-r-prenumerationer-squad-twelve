@@ -1,4 +1,3 @@
-// unchanged imports
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
@@ -55,8 +54,6 @@ const Dashboard = () => {
     const currentUser = getCurrentUser();
     if (currentUser) {
       console.log('Loaded current user:', currentUser);
-
-      // If admin → redirect to admin panel
       if (currentUser.role === 'admin') {
         navigate('/admin');
         return;
@@ -69,16 +66,30 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
+  const [filter, setFilter] = useState<string>(user?.level || 'all');
+
+  useEffect(() => {
+    if (user && user.level && filter === 'all') {
+      setFilter(user.level);
+    }
+  }, [user]);
+
   useEffect(() => {
     const fetchNews = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
           setError('No auth token found.');
+          setNews([]);
           return;
         }
 
-        const response = await fetch('http://localhost:3000/auth/news', {
+        const url = new URL('http://localhost:3000/auth/news');
+        if (filter) {
+          url.searchParams.append('filter', filter);
+        }
+
+        const response = await fetch(url.toString(), {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -103,7 +114,7 @@ const Dashboard = () => {
     if (user) {
       fetchNews();
     }
-  }, [user]);
+  }, [user, filter]);
 
   useEffect(() => {
     const newShowButtonMap = new Map<number, boolean>();
@@ -253,22 +264,48 @@ const Dashboard = () => {
     }
   }, [user?.id]);
 
+  const filteredNews = news.filter((article) => {
+    if (!user) return false;
+
+    if (article.access_level === 'free') {
+      return true;
+    }
+
+    if (user.level === 'curious' && article.access_level === 'curious') {
+      return true;
+    }
+
+    if (
+      user.level === 'informed' &&
+      (article.access_level === 'curious' ||
+        article.access_level === 'informed')
+    ) {
+      return true;
+    }
+
+    if (user.level === 'insider') {
+      return true;
+    }
+
+    return false;
+  });
+
   return (
     <>
       <Header />
-      <div className="main-container">
+      <div className='main-container'>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {user ? (
           <>
             <h1>Dashboard</h1>
-            <section className="user-news-section">
-              <ul className="user-news-list">
-                <li className="user-news-item">
-                  <h3 className="news-title">Welcome, {user.name}!</h3>
-                  <p className="news-snippet">
+            <section className='user-news-section'>
+              <ul className='user-news-list'>
+                <li className='user-news-item'>
+                  <h3 className='news-title'>Welcome, {user.name}!</h3>
+                  <p className='news-snippet'>
                     <strong>Email:</strong> {user.email}
                   </p>
-                  <p className="news-snippet">
+                  <p className='news-snippet'>
                     <strong>Access Level:</strong> {user.level}
                   </p>
                 </li>
@@ -377,7 +414,7 @@ const Dashboard = () => {
               </ul>
               {user && user.level !== 'free' && (
                 <button
-                  className="cancelSubBtn"
+                  className='cancelSubBtn'
                   onClick={handleCancelSubscription}
                 >
                   Cancel My Subscription
@@ -385,22 +422,35 @@ const Dashboard = () => {
               )}
             </section>
 
-            <section className="user-news-section">
-              <h2 className="user-news-heading">Your Subscription News</h2>
-              {news.length > 0 ? (
-                <ul className="user-news-list">
-                  {news.map((article) => (
-                    <li key={article.id} className="user-news-item">
-                      <h3 className="news-title">{article.title}</h3>
+            <section className='user-news-section'>
+              <h2 className='user-news-heading'>Your Subscription News</h2>
+
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                style={{ marginBottom: '1rem' }}
+              >
+                <option value='all'>All News</option>
+                <option value='free'>Free news</option>
+                <option value='curious'>The Curious</option>
+                <option value='informed'>The Informed</option>
+                <option value='insider'>The Insider</option>
+              </select>
+
+              {filteredNews.length > 0 ? (
+                <ul className='user-news-list'>
+                  {filteredNews.map((article) => (
+                    <li key={article.id} className='user-news-item'>
+                      <h3 className='news-title'>{article.title}</h3>
                       <p
                         ref={(el: HTMLParagraphElement | null) => {
                           snippetRefs.current.set(article.id, el);
                         }}
-                        className="news-snippet"
+                        className='news-snippet'
                       >
                         {article.body}
                       </p>
-                      <div className="news-info-row">
+                      <div className='news-info-row'>
                         <small>
                           Level: {article.access_level} | Date:{' '}
                           {new Date(article.created_at).toLocaleDateString()}
@@ -408,7 +458,7 @@ const Dashboard = () => {
                         {showReadMoreButton.get(article.id) && (
                           <button
                             onClick={() => openArticleModal(article)}
-                            className="read-more-button"
+                            className='read-more-button'
                           >
                             Läs mer
                           </button>
@@ -418,7 +468,13 @@ const Dashboard = () => {
                   ))}
                 </ul>
               ) : (
-                <p>No additional news available for your subscription level.</p>
+                <>
+                  <p>
+                    No additional news available for your current selection or
+                    subscription level.
+                  </p>
+                  <BuyNowButtons />
+                </>
               )}
             </section>
           </>
