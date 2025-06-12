@@ -116,34 +116,41 @@ export const getNews = async (req: Request, res: Response): Promise<void> => {
   }
 
   const token = authHeader.split(' ')[1];
-  console.log('GET NEWS: Received token:', token);
+console.log('GET NEWS: Received token:', token);
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    console.log('GET NEWS: Decoded JWT token:', decoded);
+try {
+  const decoded = jwt.verify(token, JWT_SECRET) as any;
+  console.log('GET NEWS: Decoded JWT token:', decoded);
 
-    const userLevel = decoded.level;
-    if (userLevel === undefined || accessPriority[userLevel] === undefined) {
-      console.error(
-        'GET NEWS: Invalid or missing user level in token:',
-        userLevel
-      );
-      res
-        .status(403)
-        .json({ message: 'Forbidden - invalid subscription level' });
-      return;
-    }
+  const userLevel = decoded.level;
+  if (userLevel === undefined || accessPriority[userLevel] === undefined) {
+    console.error(
+      'GET NEWS: Invalid or missing user level in token:',
+      userLevel
+    );
+    res
+    .status(403)
+    .json({ message: 'Forbidden - invalid subscription level' });
+    return;
+  }
+  
 
-    const allowedLevels = Object.entries(accessPriority)
+  const filterLevel = req.query.filter as string | undefined;
+  let allowedLevels: string[];
+  if (filterLevel && accessPriority[filterLevel] !== undefined) {
+    allowedLevels = [filterLevel];
+  } else {
+    allowedLevels = Object.entries(accessPriority)
       .filter(([_, value]) => value <= accessPriority[userLevel])
       .map(([key]) => key);
+  }
 
-    console.log('GET NEWS: Allowed news levels for user:', allowedLevels);
+  console.log('GET NEWS: Allowed news levels for user:', allowedLevels);
 
-    const [rows] = await db.query(
-      `SELECT * FROM content WHERE access_level IN (?) ORDER BY created_at DESC`,
-      [allowedLevels]
-    );
+  const [rows] = await db.query(
+    `SELECT * FROM content WHERE access_level IN (?) ORDER BY created_at DESC`,
+    [allowedLevels]
+  );
 
     console.log(`GET NEWS: Returning ${(rows as any[]).length} news articles`);
     res.json(rows);
