@@ -6,12 +6,25 @@ import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
+type StripeInterval = 'day' | 'week' | 'month' | 'year';
+
 interface ProductInfo {
   productId: string;
   priceId: string;
   interval: string;
   unitAmount: number;
   currency?: string;
+}
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: number;
+    name?: string;
+    email?: string;
+    level?: string;
+    role?: string;
+    subscription_status?: string;
+  };
 }
 
 let productsCache: Record<string, ProductInfo> | null = null;
@@ -166,7 +179,7 @@ const getStripeProducts = async (): Promise<Record<string, ProductInfo>> => {
   }
 };
 
-export const createCheckoutSession = async (req: Request, res: Response): Promise<void> => {
+export const createCheckoutSession = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ message: 'Authentication required' });
     return;
@@ -214,18 +227,23 @@ export const createCheckoutSession = async (req: Request, res: Response): Promis
       await db.query('UPDATE users SET stripe_customer_id = ? WHERE id = ?', [customerId, req.user.id]);
     }
 
-    const lineItems = productInfo.priceId === 'dynamic' 
-      ? [{
-          price_data: {
-            currency: 'sek',
-            product: productInfo.productId,
-            recurring: {
-              interval: productInfo.interval as 'day' | 'week' | 'month' | 'year',
-            },
-            unit_amount: productInfo.unitAmount,
+    const createLineItems = (productInfo: ProductInfo) => {
+      return [{
+        price_data: {
+          currency: 'sek',
+          product: productInfo.productId,
+          recurring: {
+            interval: productInfo.interval as StripeInterval,
+            interval_count: 1,
           },
-          quantity: 1,
-        }] 
+          unit_amount: productInfo.unitAmount,
+        },
+        quantity: 1,
+      }];
+    };
+
+    const lineItems = productInfo.priceId === 'dynamic' 
+      ? createLineItems(productInfo)
       : [{
           price: productInfo.priceId,
           quantity: 1,
@@ -234,12 +252,12 @@ export const createCheckoutSession = async (req: Request, res: Response): Promis
     console.log('Creating checkout session with line items:', JSON.stringify(lineItems));
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'subscription',
       customer: customerId,
-      line_items: lineItems,
-      success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/subscription/cancel`,
+      payment_method_types: ['card'],
+      line_items: createLineItems(productInfo),
+      mode: 'subscription',
+      success_url: `${process.env.FRONTEND_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/subscription/cancel`,
       metadata: {
         userId: req.user.id.toString(),
         tier,
@@ -253,7 +271,7 @@ export const createCheckoutSession = async (req: Request, res: Response): Promis
   }
 };
 
-export const getUserSubscription = async (req: Request, res: Response): Promise<void> => {
+export const getUserSubscription = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ message: 'Authentication required' });
     return;
@@ -293,7 +311,7 @@ export const getUserSubscription = async (req: Request, res: Response): Promise<
   }
 };
 
-export const verifySession = async (req: Request, res: Response): Promise<void> => {
+export const verifySession = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { session_id } = req.query;
   
   if (!session_id || !req.user) {
@@ -591,7 +609,7 @@ export const updateProductMetadata = async (req: Request, res: Response): Promis
   }
 };
 
-export const checkSubscriptionStatus = async (req: Request, res: Response): Promise<void> => {
+export const checkSubscriptionStatus = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ message: 'Authentication required' });
     return;
