@@ -125,7 +125,7 @@ const SubscriptionSuccess = () => {
     <>
       <Header />
       <div className="main-container">
-        <h1>Subscription Processing</h1>
+        <h1>Subscription Successful</h1>
 
         {loading ? (
           <p>Processing your subscription...</p>
