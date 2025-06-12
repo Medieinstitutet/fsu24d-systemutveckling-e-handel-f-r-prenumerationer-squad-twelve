@@ -51,6 +51,8 @@ const Home = () => {
     new Map()
   );
 
+  const [filter, setFilter] = useState<string>('all');
+
   useEffect(() => {
     if (isAuthenticated()) {
       const currentUser = getCurrentUser();
@@ -67,6 +69,7 @@ const Home = () => {
           email: currentUser.email,
           level: currentUser.level,
         });
+        setFilter(currentUser.level);
       } else {
         setError('Could not load user info.');
       }
@@ -79,10 +82,16 @@ const Home = () => {
         const token = localStorage.getItem('token');
         if (!token) {
           setError('No auth token found.');
+          setNews([]);
           return;
         }
 
-        const response = await fetch('http://localhost:3000/auth/news', {
+        const url = new URL('http://localhost:3000/auth/news');
+        if (filter) {
+          url.searchParams.append('filter', filter);
+        }
+
+        const response = await fetch(url.toString(), {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -103,8 +112,10 @@ const Home = () => {
 
     if (user) {
       fetchNews();
+    } else {
+      setNews([]);
     }
-  }, [user]);
+  }, [user, filter]);
 
   useEffect(() => {
     const newShowButtonMap = new Map<number, boolean>();
@@ -126,79 +137,123 @@ const Home = () => {
     setSelectedArticle(null);
   };
 
+  const filteredNews = news.filter((article) => {
+    if (!user) return false;
+
+    if (article.access_level === 'free') {
+      return true;
+    }
+
+    if (user.level === 'curious' && article.access_level === 'curious') {
+      return true;
+    }
+
+    if (
+      user.level === 'informed' &&
+      (article.access_level === 'curious' ||
+        article.access_level === 'informed')
+    ) {
+      return true;
+    }
+
+    if (user.level === 'insider') {
+      return true;
+    }
+
+    return false;
+  });
+
   return (
     <>
       <Header />
-      <div className="main-container">
+      <div className='main-container'>
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
-        <h1 className="home-title">
+        <h1 className='home-title'>
           {user ? `Welcome, ${user.name}!` : 'Welcome!'}
         </h1>
 
         <BuyNow />
 
-        <section className="free-news-section">
-          <h2 className="free-news-heading">Free News</h2>
-          <ul className="free-news-list">
-            {freeNews.map(({ id, title, snippet }) => (
-              <li key={id} className="free-news-item">
-                <strong className="news-title">{title}</strong>
-                <p className="news-snippet">{snippet}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {!user && (
+          <section className='free-news-section'>
+            <h2 className='free-news-heading'>Free News</h2>
+            <ul className='free-news-list'>
+              {freeNews.map(({ id, title, snippet }) => (
+                <li key={id} className='free-news-item'>
+                  <strong className='news-title'>{title}</strong>
+                  <p className='news-snippet'>{snippet}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-        <section className="user-news-section">
-          <h2 className="user-news-heading">Your Subscription News</h2>
+        <section className='user-news-section'>
+          <h2 className='user-news-heading'>Your Subscription News</h2>
           {user ? (
-            news.length > 0 ? (
-              <ul className="user-news-list">
-                {news.map((article) => (
-                  <li key={article.id} className="user-news-item">
-                    <h3 className="news-title">{article.title}</h3>
+            <>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                style={{ marginBottom: '1rem' }}
+              >
+                <option value='all'>All News</option>
+                <option value='free'>Free news</option>
+                <option value='curious'>The Curious</option>
+                <option value='informed'>The Informed</option>
+                <option value='insider'>The Insider</option>
+              </select>
 
-                    <p
-                      ref={(el: HTMLParagraphElement | null) => {
-                        snippetRefs.current.set(article.id, el);
-                      }}
-                      className="news-snippet"
-                    >
-                      {article.body}
-                    </p>
-                    <div className="news-info-row">
-                      <small>
-                        Level: {article.access_level} | Date:{' '}
-                        {new Date(article.created_at).toLocaleDateString()}
-                      </small>
-                      {showReadMoreButton.get(article.id) && (
-                        <button
-                          onClick={() => openModal(article)}
-                          className="read-more-button"
-                        >
-                          Läs mer
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>
-                No additional news available for your subscription level. Please
-                choose a plan below:
-              </p>
-            )
+              {filteredNews.length > 0 ? (
+                <ul className='user-news-list'>
+                  {filteredNews.map((article) => (
+                    <li key={article.id} className='user-news-item'>
+                      <h3 className='news-title'>{article.title}</h3>
+
+                      <p
+                        ref={(el: HTMLParagraphElement | null) => {
+                          snippetRefs.current.set(article.id, el);
+                        }}
+                        className='news-snippet'
+                      >
+                        {article.body}
+                      </p>
+                      <div className='news-info-row'>
+                        <small>
+                          Level: {article.access_level} | Date:{' '}
+                          {new Date(article.created_at).toLocaleDateString()}
+                        </small>
+                        {showReadMoreButton.get(article.id) && (
+                          <button
+                            onClick={() => openModal(article)}
+                            className='read-more-button'
+                          >
+                            Läs mer
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <>
+                  <p>
+                    No additional news available for your current selection or subscription level.
+                  </p>
+                  <BuyNowButtons />
+                </>
+              )}
+            </>
           ) : (
             <p>Please log in to see subscription-based news.</p>
           )}
-
-          <BuyNowButtons />
         </section>
       </div>
       <Footer />
-      <ArticleModal article={selectedArticle} onClose={closeModal} />
+      {selectedArticle && (
+        <ArticleModal article={selectedArticle} onClose={closeModal} />
+      )}
     </>
   );
 };
