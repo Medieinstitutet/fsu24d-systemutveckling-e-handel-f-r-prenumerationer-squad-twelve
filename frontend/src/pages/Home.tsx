@@ -138,17 +138,19 @@ const Home = () => {
 
         <BuyNow />
 
-        <section className="free-news-section">
-          <h2 className="free-news-heading">Free News</h2>
-          <ul className="free-news-list">
-            {freeNews.map(({ id, title, snippet }) => (
-              <li key={id} className="free-news-item">
-                <strong className="news-title">{title}</strong>
-                <p className="news-snippet">{snippet}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {!user && (
+          <section className="free-news-section">
+            <h2 className="free-news-heading">Free News</h2>
+            <ul className="free-news-list">
+              {freeNews.map(({ id, title, snippet }) => (
+                <li key={id} className="free-news-item">
+                  <strong className="news-title">{title}</strong>
+                  <p className="news-snippet">{snippet}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section className="user-news-section">
           <h2 className="user-news-heading">Your Subscription News</h2>
