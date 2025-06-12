@@ -10,10 +10,16 @@ import BuyNowButtons from '../components/BuyNowButtons';
 import type { AuthPayload } from '../types/AuthPayload';
 import ArticleModal from '../modals/ArticleModal';
 
+interface ExtendedAuthPayload extends AuthPayload {
+  billingFrequency?: string;
+  nextBillingDate?: string;
+  validUntil?: string;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<AuthPayload | null>(null);
+  const [user, setUser] = useState<ExtendedAuthPayload | null>(null);
 
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [error, setError] = useState('');
@@ -161,23 +167,19 @@ const Dashboard = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Subscription data received:", data);
 
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          setUser(getCurrentUser());
-        }
-
-        if (data.status === 'canceled' && data.currentPeriodEnd) {
-          setModalContent({
-            title: 'Subscription Status',
-            message: `Your subscription is cancelled and will end on ${new Date(
-              data.currentPeriodEnd
-            ).toLocaleDateString()}.`,
-            confirmText: 'OK',
-            onConfirm: () => setShowModal(false),
-          });
-          setShowModal(true);
-        }
+        setUser(prevUser => {
+          if (!prevUser) return null;
+          
+          return {
+            ...prevUser,
+            subscription_status: data.status,
+            validUntil: data.currentPeriodEnd,
+            billingFrequency: data.interval,
+            nextBillingDate: data.nextInvoice || data.currentPeriodEnd // Use nextInvoice if available
+          };
+        });
       }
     } catch (error) {
       console.error('Error checking subscription status:', error);
@@ -250,10 +252,17 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (user && user.subscription_status === 'cancelled') {
+    if (user && (user.subscription_status === 'cancelled' || user.subscription_status === 'active')) {
       checkSubscriptionStatus();
     }
-  }, [user]);
+  }, [user?.subscription_status]); 
+
+  useEffect(() => {
+    if (user && user.level !== 'free') {
+      console.log('Checking subscription details for paid user');
+      checkSubscriptionStatus();
+    }
+  }, [user?.id]);
 
   const filteredNews = news.filter((article) => {
     if (!user) return false;
@@ -300,6 +309,59 @@ const Dashboard = () => {
                     <strong>Access Level:</strong> {user.level}
                   </p>
                 </li>
+                {user && user.level !== 'free' && (
+                  <li className="user-news-item">
+                    <h3 className="news-title">Subscription</h3>
+                    <div className="subscription-details">
+                      <div className="subscription-row">
+                        <strong>Product:</strong>
+                        <span>
+                          The {user.level.charAt(0).toUpperCase() + user.level.slice(1)}
+                        </span>
+                      </div>
+                      
+                      <div className="subscription-row">
+                        <strong>Status:</strong>
+                        <span>
+                          {user.subscription_status === 'active' ? 'Active' : 
+                           user.subscription_status === 'cancelled' ? 'Ending' : 
+                           user.subscription_status}
+                        </span>
+                      </div>
+                      
+                      {user.validUntil && (
+                        <div className="subscription-row">
+                          <strong>{user.subscription_status === 'cancelled' ? 'Ends:' : 'Active until:'}</strong>
+                          <span>
+                            {new Date(user.validUntil).toLocaleDateString('en-US', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className="subscription-row">
+                        <strong>Frequency:</strong>
+                        <span>Billed {user.billingFrequency === 'week' ? 'weekly' : 
+                                                user.billingFrequency === 'month' ? 'monthly' : 
+                                                user.billingFrequency === 'year' ? 'yearly' : 
+                                                user.billingFrequency}</span>
+                      </div>
+                      
+                      <div className="subscription-row">
+                        <strong>Next invoice:</strong>
+                        <span>{(user.subscription_status === 'active' && user.nextBillingDate) ? 
+                              new Date(user.nextBillingDate).toLocaleDateString('en-US', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              }) : '–'}</span>
+                      </div>
+                    </div>
+                  </li>
+                )}
                 <BuyNowButtons />
                 {user?.subscription_status === 'failed' && (
                   <div

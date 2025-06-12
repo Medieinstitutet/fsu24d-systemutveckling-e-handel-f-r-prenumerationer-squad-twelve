@@ -112,6 +112,24 @@
   background-color: #360101;
 }
 
+.subscription-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.subscription-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+}
+
+.subscription-row strong {
+  font-weight: bold;
+  min-width: 120px;
+}
+
 @media (max-width: 600px) {
   .navcontainer {
     flex-direction: column;
