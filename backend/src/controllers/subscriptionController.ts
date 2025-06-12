@@ -638,11 +638,14 @@ export const checkSubscriptionStatus = async (req: AuthenticatedRequest, res: Re
     let nextInvoice = null;
     let currentPeriodEnd = null;
 
+    const isCancelled = (subscription as any).cancel_at_period_end === true;
+    const displayStatus = isCancelled ? 'cancelled' : subscription.status;
+
     if ((subscription as any).current_period_end) {
       const endTimestamp = (subscription as any).current_period_end * 1000;
       currentPeriodEnd = new Date(endTimestamp);
       
-      if (subscription.status === 'active') {
+      if (subscription.status === 'active' && !isCancelled) {
         nextInvoice = new Date(endTimestamp).toISOString();
       }
     } 
@@ -666,7 +669,7 @@ export const checkSubscriptionStatus = async (req: AuthenticatedRequest, res: Re
 
     res.json({
       isActive: subscription.status === 'active',
-      status: subscription.status,
+      status: displayStatus,
       currentPeriodEnd: currentPeriodEnd ? currentPeriodEnd.toISOString() : null,
       nextInvoice: nextInvoice,
       interval: subscription.items.data[0]?.plan.interval || 'week',
