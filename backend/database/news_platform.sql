@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Jun 11, 2025 at 02:03 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Värd: 127.0.0.1
+-- Tid vid skapande: 12 jun 2025 kl 13:42
+-- Serverversion: 10.4.32-MariaDB
+-- PHP-version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `news_platform`
+-- Databas: `news_platform`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `content`
+-- Tabellstruktur `content`
 --
 
 CREATE TABLE `content` (
@@ -36,7 +36,7 @@ CREATE TABLE `content` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `content`
+-- Dumpning av Data i tabell `content`
 --
 
 INSERT INTO `content` (`id`, `title`, `body`, `access_level`, `created_at`) VALUES
@@ -49,7 +49,7 @@ INSERT INTO `content` (`id`, `title`, `body`, `access_level`, `created_at`) VALU
 -- --------------------------------------------------------
 
 --
--- Table structure for table `subscriptions`
+-- Tabellstruktur `subscriptions`
 --
 
 CREATE TABLE `subscriptions` (
@@ -63,18 +63,23 @@ CREATE TABLE `subscriptions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `subscriptions`
+-- Dumpning av Data i tabell `subscriptions`
 --
 
 INSERT INTO `subscriptions` (`id`, `user_id`, `stripe_subscription_id`, `level`, `status`, `valid_until`, `created_at`) VALUES
-(14, 16, '[object Object]', 'curious', 'active', '2025-07-05 17:28:10', '2025-06-05 15:28:10'),
-(15, 17, '[object Object]', 'curious', 'active', '2025-07-11 03:26:51', '2025-06-10 11:08:11'),
-(16, 18, '[object Object]', 'informed', 'active', '2025-07-10 13:21:00', '2025-06-10 11:20:07');
+(24, 22, 'sub_1RZ2vNGdVvFQyCt49aqF97PT', 'curious', 'active', '2025-07-12 06:43:42', '2025-06-12 04:43:38'),
+(25, 23, 'sub_1RZ30fGdVvFQyCt4Iaiv6qPm', 'curious', 'active', '2025-06-19 06:50:08', '2025-06-12 04:45:09'),
+(26, 23, 'sub_1RZ3AfGdVvFQyCt4rAPlSzk5', 'informed', 'active', '2025-06-19 06:55:23', '2025-06-12 05:01:16'),
+(27, 23, 'sub_1RZ3GuGdVvFQyCt4NFcWxC8X', 'insider', 'active', '2025-06-19 07:01:51', '2025-06-12 05:01:57'),
+(28, 24, 'sub_1RZ3NKGdVvFQyCt4bMRojEev', 'curious', 'active', '2025-06-19 07:08:29', '2025-06-12 05:08:34'),
+(29, 24, 'sub_1RZ3S9GdVvFQyCt4CPr0CXoF', 'insider', 'active', '2025-06-19 07:13:27', '2025-06-12 05:13:33'),
+(30, 25, 'sub_1RZ9QJGdVvFQyCt45cHt6bV9', 'curious', 'active', '2025-06-19 13:35:58', '2025-06-12 11:36:04'),
+(31, 25, 'sub_1RZ9RYGdVvFQyCt4Bf2GPPw6', 'informed', 'active', '2025-06-19 13:37:15', '2025-06-12 11:37:21');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `users`
+-- Tabellstruktur `users`
 --
 
 CREATE TABLE `users` (
@@ -91,67 +96,68 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `users`
+-- Dumpning av Data i tabell `users`
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `subscription_level`, `role`, `subscription_status`, `stripe_customer_id`, `stripe_subscription_id`, `created_at`) VALUES
-(16, 'hello', 'linlongers@gmail.com', '$2b$10$eK1e9F2beDj/KnW4.nLXm.JK5/CUxG5fBNGyCKL1CvyTEWu08l6rO', 'curious', 'user', 'active', 'cus_SRXwM5l3X8whyq', '[object Object]', '2025-06-05 14:32:37'),
-(17, 'Test user', 'test@example.com', '$2b$10$3SOIhoO6ulkI7/y4LyHbzuB4OsBAe2C.DccFavmKVm0QG7WG2LRRW', 'curious', 'user', 'cancelled', 'cus_STBLZBxOY0Q528', '[object Object]', '2025-06-09 18:05:25'),
-(18, 'Test User 2', 'test2@example.com', '$2b$10$u4lRqvVD4uVbbngpPja7e.zw.HPlEyUnYrqmO3Foeg6zPipd6oTp.', 'informed', 'user', 'active', 'cus_STMx2hTfpfY6MZ', '[object Object]', '2025-06-10 11:18:46'),
-(19, 'Admin', 'admin@example.com', '$2b$10$6NiCN4l9VLf2vmqyNIqqte12wyRTphO0/4MqjGGFrssZXx/MC.toC', 'free', 'admin', 'inactive', NULL, NULL, '2025-06-10 20:28:52');
+(19, 'Admin', 'admin@example.com', '$2b$10$6NiCN4l9VLf2vmqyNIqqte12wyRTphO0/4MqjGGFrssZXx/MC.toC', 'free', 'admin', 'inactive', NULL, NULL, '2025-06-10 20:28:52'),
+(22, 'Leksaksbil', 'linlongers@gmail.com', '$2b$10$cyQvQ3zTdVTAPmb/daro4.3A5uTPHL5/.dTaLRtmBKjmRb9G.sy.2', 'curious', 'user', 'active', 'cus_SU0xgfJveekflU', 'sub_1RZ2vNGdVvFQyCt49aqF97PT', '2025-06-12 04:39:17'),
+(23, 'car', 'hejsansvejsan@gmail.com', '$2b$10$F5oLfxb0aOGfxENQrYDt5uBsq50zgHVLY1tGjMiiMiwKfBGsVbKa2', 'insider', 'user', 'cancelled', 'cus_SU12y3OfM0ObmS', 'sub_1RZ3GuGdVvFQyCt4NFcWxC8X', '2025-06-12 04:44:23'),
+(24, 'blablabla', 'john.doe@gmail.com', '$2b$10$5lcdc.50CVApmYUwWgvV1uDH.q9yWm96Ql7ZuNhCn9CBuC7jXwHqu', 'insider', 'user', 'cancelled', 'cus_SU1PwzBBB3VpRg', 'sub_1RZ3S9GdVvFQyCt4CPr0CXoF', '2025-06-12 05:08:11'),
+(25, 'car', 'hejsan@gmail.com', '$2b$10$mEx8tWRjLGyii3A6Ubaag.EZnskDHAijHpfUbTnBXSBoEphv8HG6u', 'informed', 'user', 'active', 'cus_SU7GW8Oyu6aAsS', 'sub_1RZ9RYGdVvFQyCt4Bf2GPPw6', '2025-06-12 11:10:05');
 
 --
--- Indexes for dumped tables
+-- Index för dumpade tabeller
 --
 
 --
--- Indexes for table `content`
+-- Index för tabell `content`
 --
 ALTER TABLE `content`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `subscriptions`
+-- Index för tabell `subscriptions`
 --
 ALTER TABLE `subscriptions`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `users`
+-- Index för tabell `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT för dumpade tabeller
 --
 
 --
--- AUTO_INCREMENT for table `content`
+-- AUTO_INCREMENT för tabell `content`
 --
 ALTER TABLE `content`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
--- AUTO_INCREMENT for table `subscriptions`
+-- AUTO_INCREMENT för tabell `subscriptions`
 --
 ALTER TABLE `subscriptions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT för tabell `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
--- Constraints for dumped tables
+-- Restriktioner för dumpade tabeller
 --
 
 --
--- Constraints for table `subscriptions`
+-- Restriktioner för tabell `subscriptions`
 --
 ALTER TABLE `subscriptions`
   ADD CONSTRAINT `subscriptions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;

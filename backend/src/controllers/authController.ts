@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { db } from '../utils/db';
+import stripe from '../utils/stripe';
 
 dotenv.config();
 
@@ -171,6 +172,27 @@ export const cancelSubscription = async (
     const userId = decoded.id;
     console.log(`CANCEL SUBSCRIPTION: User ID from token: ${userId}`);
 
+    const [userRows] = await db.query(
+      'SELECT stripe_subscription_id FROM users WHERE id = ?',
+      [userId]
+    );
+
+    const user = (userRows as any[])[0];
+
+    if (user && user.stripe_subscription_id) {
+      try {
+        await stripe.subscriptions.update(user.stripe_subscription_id, {
+          cancel_at_period_end: true,
+        });
+
+        console.log(
+          `CANCEL SUBSCRIPTION: Subscription ${user.stripe_subscription_id} cancelled with Stripe`
+        );
+      } catch (stripeErr) {
+        console.error('CANCEL SUBSCRIPTION: Stripe error:', stripeErr);
+      }
+    }
+
     await db.query(
       "UPDATE users SET subscription_status = 'cancelled' WHERE id = ?",
       [userId]
@@ -181,7 +203,7 @@ export const cancelSubscription = async (
         id: userId,
         name: decoded.name,
         email: decoded.email,
-        level: decoded.level, // ✅ keep the level
+        level: decoded.level,
         role: decoded.role,
         subscription_status: 'cancelled',
       },

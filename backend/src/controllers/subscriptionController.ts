@@ -304,93 +304,226 @@ export const verifySession = async (req: Request, res: Response): Promise<void> 
   try {
     console.log('Verifying session:', session_id);
     
-    const session = await stripe.checkout.sessions.retrieve(
-      session_id as string,
-      {
-        expand: ['subscription', 'line_items']
+    let session;
+    try {
+      console.log(`Retrieving Stripe session with ID: ${session_id}`);
+      
+      session = await stripe.checkout.sessions.retrieve(
+        session_id as string,
+        {
+          expand: ['subscription', 'line_items']
+        }
+      );
+      
+      console.log('Session retrieved successfully:', session.id);
+      
+    } catch (stripeError: any) {
+      console.error('Stripe API error details:', {
+        type: stripeError.type,
+        code: stripeError.code,
+        message: stripeError.message,
+        requestId: stripeError.requestId
+      });
+      
+      if (stripeError.type === 'StripeInvalidRequestError') {
+        res.status(400).json({ 
+          message: 'Invalid session ID',
+          details: stripeError.message
+        });
+      } else {
+        res.status(500).json({ 
+          message: 'Failed to retrieve checkout session from Stripe',
+          details: stripeError.message
+        });
       }
-    );
-    
-    if (!session) {
-      res.status(404).json({ message: 'Session not found' });
       return;
     }
 
     console.log('Session retrieved:', session.id, 'Status:', session.status);
     console.log('Session metadata:', JSON.stringify(session.metadata));
-    console.log('Subscription data:', session.subscription ? JSON.stringify(session.subscription) : 'No subscription');
     
     const tier = session.metadata?.tier;
     const userId = session.metadata?.userId;
-    const subscriptionId = session.subscription?.toString();
+    const subscriptionId = typeof session.subscription === 'string' 
+      ? session.subscription 
+      : session.subscription?.id;
     
-    if (tier && userId && subscriptionId) {
-      if (!['free', 'curious', 'informed', 'insider'].includes(tier)) {
-        console.error(`Invalid tier received from Stripe metadata: ${tier}`);
-        res.status(400).json({ message: 'Invalid subscription tier' });
+    if (!tier || !userId || !subscriptionId) {
+      console.error('Missing required session data:', { 
+        tier: tier || 'MISSING', 
+        userId: userId || 'MISSING', 
+        subscriptionId: subscriptionId || 'MISSING' 
+      });
+      res.status(400).json({ message: 'Invalid session data' });
+      return;
+    }
+    
+    if (parseInt(userId) !== req.user.id) {
+      console.error('User ID mismatch:', { sessionUserId: userId, authenticatedUserId: req.user.id });
+      res.status(403).json({ message: 'Session belongs to a different user' });
+      return;
+    }
+    
+    if (!['curious', 'informed', 'insider'].includes(tier)) {
+      console.error(`Invalid tier received from Stripe metadata: ${tier}`);
+      res.status(400).json({ message: 'Invalid subscription tier' });
+      return;
+    }
+    
+    let subscription;
+    try {
+      subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ['items.data.price']
+      });
+      console.log('Subscription details retrieved from Stripe');
+    } catch (stripeError) {
+      console.error('Error retrieving subscription from Stripe:', stripeError);
+      res.status(500).json({ message: 'Failed to retrieve subscription details from Stripe' });
+      return;
+    }
+    
+    let validUntil;
+    let interval;
+    try {
+      if (!subscription.items?.data[0]?.price || 
+          !(subscription.items.data[0].price as any)?.recurring?.interval) {
+        console.error('Missing required interval data in subscription');
+        res.status(500).json({ message: 'Invalid subscription data: missing interval' });
         return;
       }
       
-      const validUntil = new Date();
-      validUntil.setMonth(validUntil.getMonth() + 1);
+      const rawInterval = (subscription.items.data[0].price as any).recurring.interval;
+      const intervalCount = (subscription.items.data[0].price as any).recurring.interval_count || 1;
       
-      console.log(`Updating subscription for user: ${userId}, Tier: ${tier}`);
-      
-      try {
-        await db.query(
-          'UPDATE users SET subscription_level = ?, subscription_status = ?, stripe_subscription_id = ? WHERE id = ?', 
-          [tier, 'active', subscriptionId, userId]
-        );
-        
-        console.log(`User subscription_level updated to: ${tier}`);
-        
-        const [existingSubscription] = await db.query(
-          'SELECT id FROM subscriptions WHERE user_id = ? AND stripe_subscription_id = ?', 
-          [userId, subscriptionId]
-        );
-        
-        if ((existingSubscription as any[]).length === 0) {
-          await db.query(
-            'INSERT INTO subscriptions (user_id, stripe_subscription_id, level, status, valid_until) VALUES (?, ?, ?, ?, ?)', 
-            [userId, subscriptionId, tier, 'active', validUntil]
-          );
-        } else {
-          await db.query(
-            'UPDATE subscriptions SET level = ?, status = ?, valid_until = ? WHERE user_id = ? AND stripe_subscription_id = ?', 
-            [tier, 'active', validUntil, userId, subscriptionId]
-          );
-        }
-        
-        const [userInfo] = await db.query('SELECT name, email FROM users WHERE id = ?', [userId]);
-        const user = (userInfo as any[])[0];
-        
-        const token = jwt.sign(
-          {
-            id: parseInt(userId),
-            name: user.name,
-            email: user.email,
-            level: tier,
-          },
-          process.env.JWT_SECRET as string,
-          { expiresIn: '6h' }
-        );
-        
-        res.json({ 
-          success: true, 
-          tier, 
-          status: 'active',
-          token
-        });
-      } catch (updateError) {
-        console.error('Error updating subscription in database:', updateError);
-        res.status(500).json({ message: 'Failed to update subscription information' });
+      let interval = rawInterval;
+      if (rawInterval === 'day' && intervalCount === 7) {
+        interval = 'week';
+        console.log('Normalized day+7 interval to week for consistency');
       }
-    } else {
-      res.status(400).json({ message: 'Invalid session data' });
+      
+      console.log(`Subscription interval from Stripe: ${rawInterval}, count: ${intervalCount}, normalized: ${interval}`);
+      
+      if (!(subscription as any).current_period_end) {
+        console.log('Setting subscription end date based on normalized interval');
+        
+        const startTimestamp = (subscription as any).current_period_start || 
+                                (subscription as any).created || 
+                                Math.floor(Date.now() / 1000);
+        
+        const startDate = new Date(startTimestamp * 1000);
+        const endDate = new Date(startDate);
+        
+        endDate.setDate(endDate.getDate() + 7);
+        console.log(`Calculated end date: ${endDate.toISOString()} (7 days from start)`);
+        
+        const endTimestamp = Math.floor(endDate.getTime() / 1000);
+        
+        try {
+          const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
+            cancel_at: endTimestamp
+          });
+          
+          console.log(`Updated subscription ${subscriptionId} with cancel_at: ${new Date(endTimestamp * 1000).toISOString()}`);
+          
+          validUntil = new Date(endTimestamp * 1000);
+        } catch (updateError) {
+          console.error('Error updating subscription end date:', updateError);
+          res.status(500).json({ 
+            message: 'Failed to set subscription end date',
+            details: 'Could not update the Stripe subscription with an end date.'
+          });
+          return;
+        }
+      } else {
+        validUntil = new Date(((subscription as any).current_period_end) * 1000);
+      }
+      
+      console.log(`Subscription valid until: ${validUntil.toISOString()}`);
+    } catch (dateError) {
+      console.error('Error processing subscription data:', dateError);
+      res.status(500).json({ 
+        message: 'Failed to process subscription data',
+        details: dateError instanceof Error ? dateError.message : 'Unknown error' 
+      });
+      return;
+    }
+
+    try {
+      await db.query('START TRANSACTION');
+      
+      const [userUpdate] = await db.query(
+        'UPDATE users SET subscription_level = ?, subscription_status = ?, stripe_subscription_id = ? WHERE id = ?', 
+        [tier, 'active', subscriptionId, userId]
+      );
+      
+      console.log('User update result:', userUpdate);
+      
+      const [existingSubscriptionResult] = await db.query(
+        'SELECT id FROM subscriptions WHERE user_id = ? AND stripe_subscription_id = ?', 
+        [userId, subscriptionId]
+      );
+      
+      const existingSubscription = (existingSubscriptionResult as any[]);
+      
+      if (existingSubscription.length === 0) {
+        await db.query(
+          'INSERT INTO subscriptions (user_id, stripe_subscription_id, level, status, valid_until) VALUES (?, ?, ?, ?, ?)', 
+          [userId, subscriptionId, tier, 'active', validUntil]
+        );
+      } else {
+        await db.query(
+          'UPDATE subscriptions SET level = ?, status = ?, valid_until = ? WHERE user_id = ? AND stripe_subscription_id = ?', 
+          [tier, 'active', validUntil, userId, subscriptionId]
+        );
+      }
+      
+      const [userInfo] = await db.query('SELECT name, email, role FROM users WHERE id = ?', [userId]);
+      const user = (userInfo as any[])[0];
+      
+      if (!user) {
+        throw new Error(`User not found after update: ${userId}`);
+      }
+      
+      const token = jwt.sign(
+        {
+          id: parseInt(userId),
+          name: user.name,
+          email: user.email,
+          level: tier,
+          role: user.role || 'user',
+          subscription_status: 'active'
+        },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '6h' }
+      );
+      
+      await db.query('COMMIT');
+      
+      res.json({ 
+        success: true, 
+        tier, 
+        status: 'active',
+        token,
+        validUntil: validUntil.toISOString(),
+        subscriptionId,
+        interval: interval
+      });
+    } catch (dbError) {
+      try {
+        await db.query('ROLLBACK');
+      } catch (rollbackErr) {
+        console.error('Error during transaction rollback:', rollbackErr);
+      }
+      
+      console.error('Database error during subscription update:', dbError);
+      res.status(500).json({ message: 'Failed to update subscription in database' });
     }
   } catch (error) {
     console.error('Session verification error:', error);
-    res.status(500).json({ message: 'Failed to verify session' });
+    res.status(500).json({ 
+      message: 'Failed to verify session',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 
@@ -455,5 +588,72 @@ export const updateProductMetadata = async (req: Request, res: Response): Promis
   } catch (error) {
     console.error('Error updating product metadata:', error);
     res.status(500).json({ message: 'Failed to update product metadata' });
+  }
+};
+
+export const checkSubscriptionStatus = async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: 'Authentication required' });
+    return;
+  }
+
+  try {
+    const [userRows] = await db.query(
+      'SELECT stripe_subscription_id, stripe_customer_id, name FROM users WHERE id = ?', 
+      [req.user.id]
+    );
+    
+    const user = (userRows as any[])[0];
+    if (!user || !user.stripe_subscription_id) {
+      res.json({ 
+        isActive: false,
+        status: 'no_subscription',
+        message: 'No active subscription found'
+      });
+      return;
+    }
+
+    const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id);
+    
+    const isActive = subscription.status === 'active';
+    
+    if (subscription.status !== 'active' && req.user.subscription_status === 'active') {
+      await db.query(
+        'UPDATE users SET subscription_status = ? WHERE id = ?',
+        [subscription.status, req.user.id]
+      );
+      
+      await db.query(
+        'UPDATE subscriptions SET status = ? WHERE user_id = ? AND stripe_subscription_id = ?',
+        [subscription.status, req.user.id, user.stripe_subscription_id]
+      );
+    }
+    
+    const token = jwt.sign(
+      {
+        id: req.user.id,
+        name: user.name,
+        email: req.user.email,
+        level: req.user.level,
+        role: req.user.role,
+        subscription_status: subscription.status
+      },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '6h' }
+    );
+
+    const currentPeriodEnd = (subscription as any).current_period_end
+      ? new Date((subscription as any).current_period_end * 1000)
+      : null;
+
+    res.json({
+      isActive,
+      status: subscription.status,
+      currentPeriodEnd,
+      token
+    });
+  } catch (error) {
+    console.error('Error checking subscription status:', error);
+    res.status(500).json({ message: 'Failed to check subscription status' });
   }
 };

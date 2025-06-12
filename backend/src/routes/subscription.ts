@@ -5,7 +5,8 @@ import {
   getUserSubscription,
   verifySession,
   getProducts,
-  updateProductMetadata
+  updateProductMetadata,
+  checkSubscriptionStatus
 } from '../controllers/subscriptionController';
 
 const router = Router();
@@ -15,5 +16,6 @@ router.get('/my-subscription', requireAuth, getUserSubscription);
 router.get('/verify-session', requireAuth, verifySession);
 router.get('/products', getProducts);
 router.post('/update-metadata', requireAuth, updateProductMetadata);
+router.get('/check-status', requireAuth, checkSubscriptionStatus);
 
 export default router;
