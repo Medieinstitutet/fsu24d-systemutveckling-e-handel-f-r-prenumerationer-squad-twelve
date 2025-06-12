@@ -6,13 +6,15 @@ dotenv.config();
 
 interface AuthPayload {
   id: number;
+  name: string;
   email: string;
   level: string;
   role: string;
   subscription_status: string;
+  exp?: number;
+  iat?: number;
 }
 
-// Augment Express' Request interface globally
 declare global {
   namespace Express {
     interface Request {

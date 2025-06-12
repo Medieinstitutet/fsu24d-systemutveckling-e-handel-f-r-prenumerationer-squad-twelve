@@ -19,11 +19,11 @@ interface ProductInfo {
 interface AuthenticatedRequest extends Request {
   user?: {
     id: number;
-    name?: string;
-    email?: string;
-    level?: string;
-    role?: string;
-    subscription_status?: string;
+    name: string;      
+    email: string;    
+    level: string;     
+    role: string;      
+    subscription_status: string;
   };
 }
 
@@ -631,43 +631,45 @@ export const checkSubscriptionStatus = async (req: AuthenticatedRequest, res: Re
       return;
     }
 
-    const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id);
+    const subscription = await stripe.subscriptions.retrieve(user.stripe_subscription_id, {
+      expand: ['items.data.price']
+    });
     
-    const isActive = subscription.status === 'active';
-    
-    if (subscription.status !== 'active' && req.user.subscription_status === 'active') {
-      await db.query(
-        'UPDATE users SET subscription_status = ? WHERE id = ?',
-        [subscription.status, req.user.id]
-      );
+    let nextInvoice = null;
+    let currentPeriodEnd = null;
+
+    if ((subscription as any).current_period_end) {
+      const endTimestamp = (subscription as any).current_period_end * 1000;
+      currentPeriodEnd = new Date(endTimestamp);
       
-      await db.query(
-        'UPDATE subscriptions SET status = ? WHERE user_id = ? AND stripe_subscription_id = ?',
-        [subscription.status, req.user.id, user.stripe_subscription_id]
-      );
+      if (subscription.status === 'active') {
+        nextInvoice = new Date(endTimestamp).toISOString();
+      }
+    } 
+    else if ((subscription as any).cancel_at) {
+      const cancelTimestamp = (subscription as any).cancel_at * 1000;
+      currentPeriodEnd = new Date(cancelTimestamp);
     }
-    
+
     const token = jwt.sign(
       {
         id: req.user.id,
         name: user.name,
         email: req.user.email,
         level: req.user.level,
-        role: req.user.role,
+        role: req.user.role || 'user',
         subscription_status: subscription.status
       },
       process.env.JWT_SECRET as string,
       { expiresIn: '6h' }
     );
 
-    const currentPeriodEnd = (subscription as any).current_period_end
-      ? new Date((subscription as any).current_period_end * 1000)
-      : null;
-
     res.json({
-      isActive,
+      isActive: subscription.status === 'active',
       status: subscription.status,
-      currentPeriodEnd,
+      currentPeriodEnd: currentPeriodEnd ? currentPeriodEnd.toISOString() : null,
+      nextInvoice: nextInvoice,
+      interval: subscription.items.data[0]?.plan.interval || 'week',
       token
     });
   } catch (error) {

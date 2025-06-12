@@ -9,7 +9,6 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
   let event;
   
   try {
-    // Check if endpoint secret exists
     if (!endpointSecret) {
       console.error('Missing STRIPE_WEBHOOK_SECRET in environment variables');
       res.status(500).send('Server configuration error');
@@ -24,7 +23,6 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
     return;
   }
   
-  // Handle the event
   switch (event.type) {
     case 'invoice.payment_succeeded':
       const invoice = event.data.object as Stripe.Invoice;
@@ -46,8 +44,6 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
 };
 
 async function handleSuccessfulPayment(invoice: Stripe.Invoice): Promise<void> {
-  // Update subscription renewal date
-  // Use type assertion to access the subscription property
   const subscriptionId = (invoice as any).subscription;
   
   if (subscriptionId) {
@@ -55,10 +51,7 @@ async function handleSuccessfulPayment(invoice: Stripe.Invoice): Promise<void> {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       const customerId = subscription.customer;
       
-      // Fix: Safely access current_period_end which is a number (timestamp)
       const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
-      
-      // Find user with this customer ID
       const [userRows] = await db.query(
         'SELECT id FROM users WHERE stripe_customer_id = ?', 
         [typeof customerId === 'string' ? customerId : customerId.id]
@@ -68,7 +61,6 @@ async function handleSuccessfulPayment(invoice: Stripe.Invoice): Promise<void> {
       if (users.length > 0) {
         const userId = users[0].id;
         
-        // Update the subscription valid_until date
         await db.query(
           'UPDATE subscriptions SET valid_until = ? WHERE user_id = ? AND stripe_subscription_id = ?',
           [currentPeriodEnd, userId, subscription.id]
@@ -87,10 +79,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription): Prom
     const customerId = subscription.customer;
     const status = subscription.status;
     
-    // Fix: Safely access current_period_end which is a number (timestamp)
     const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
     
-    // Find user with this customer ID
     const [userRows] = await db.query(
       'SELECT id FROM users WHERE stripe_customer_id = ?', 
       [typeof customerId === 'string' ? customerId : customerId.id]
@@ -100,7 +90,6 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription): Prom
     if (users.length > 0) {
       const userId = users[0].id;
       
-      // Update user's subscription status if needed
       if (status !== 'active' && status !== 'trialing') {
         await db.query(
           'UPDATE users SET subscription_status = ? WHERE id = ?',
@@ -108,7 +97,6 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription): Prom
         );
       }
       
-      // Update the subscription valid_until date
       await db.query(
         'UPDATE subscriptions SET valid_until = ?, status = ? WHERE user_id = ? AND stripe_subscription_id = ?',
         [currentPeriodEnd, status, userId, subscription.id]
@@ -125,7 +113,6 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
   try {
     const customerId = subscription.customer;
     
-    // Find user with this customer ID
     const [userRows] = await db.query(
       'SELECT id FROM users WHERE stripe_customer_id = ?', 
       [typeof customerId === 'string' ? customerId : customerId.id]
@@ -135,13 +122,11 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
     if (users.length > 0) {
       const userId = users[0].id;
       
-      // Update user's subscription status
       await db.query(
         'UPDATE users SET subscription_status = ? WHERE id = ?',
         ['cancelled', userId]
       );
       
-      // Update the subscription status
       await db.query(
         'UPDATE subscriptions SET status = ? WHERE user_id = ? AND stripe_subscription_id = ?',
         ['cancelled', userId, subscription.id]

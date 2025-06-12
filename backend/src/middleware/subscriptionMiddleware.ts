@@ -20,7 +20,6 @@ export const requireSubscriptionLevel = (requiredLevel: SubscriptionLevel) => {
       return;
     }
 
-    // If the user's subscription is failed, restrict access completely
     if (req.user.subscription_status === 'failed') {
       res
         .status(403)
@@ -31,7 +30,6 @@ export const requireSubscriptionLevel = (requiredLevel: SubscriptionLevel) => {
       return;
     }
 
-    // Allow access if user level is equal to or higher than required
     const userLevel = req.user.level as SubscriptionLevel;
     const userSubscriptionValue = subscriptionLevels[userLevel] || 0;
     const requiredSubscriptionValue = subscriptionLevels[requiredLevel];
