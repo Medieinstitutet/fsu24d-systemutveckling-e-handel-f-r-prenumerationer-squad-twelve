@@ -14,9 +14,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 
-// Important: Add this BEFORE the json body parser middleware
-// The raw webhook endpoint needs the raw body for signature verification
-app.use('/webhook', webhookRoutes);
+app.use(webhookRoutes);
 
 app.use(express.json());
 
