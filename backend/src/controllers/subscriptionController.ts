@@ -617,11 +617,21 @@ export const checkSubscriptionStatus = async (req: AuthenticatedRequest, res: Re
 
   try {
     const [userRows] = await db.query(
-      'SELECT stripe_subscription_id, stripe_customer_id, name FROM users WHERE id = ?', 
+      'SELECT stripe_subscription_id, stripe_customer_id, name, subscription_status FROM users WHERE id = ?', 
       [req.user.id]
     );
     
     const user = (userRows as any[])[0];
+    
+    if (user?.subscription_status === 'failed') {
+      res.json({ 
+        isActive: false,
+        status: 'failed',
+        message: 'Payment failed, please update payment method'
+      });
+      return; 
+    }
+    
     if (!user || !user.stripe_subscription_id) {
       res.json({ 
         isActive: false,

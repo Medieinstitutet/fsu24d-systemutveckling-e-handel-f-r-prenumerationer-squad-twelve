@@ -177,7 +177,7 @@ const Dashboard = () => {
             subscription_status: data.status,
             validUntil: data.currentPeriodEnd,
             billingFrequency: data.interval,
-            nextBillingDate: data.nextInvoice || data.currentPeriodEnd // Use nextInvoice if available
+            nextBillingDate: data.nextInvoice || data.currentPeriodEnd
           };
         });
       }
@@ -258,7 +258,7 @@ const Dashboard = () => {
   }, [user?.subscription_status]); 
 
   useEffect(() => {
-    if (user && user.level !== 'free') {
+    if (user && user.level !== 'free' && user.subscription_status !== 'failed') {
       console.log('Checking subscription details for paid user');
       checkSubscriptionStatus();
     }
