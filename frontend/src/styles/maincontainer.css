@@ -23,9 +23,9 @@
   border-radius: 10px;
   background-color: #121212;
   padding: 20px;
-  margin: 0 auto; 
-  box-sizing: border-box; 
-  flex-wrap: wrap; 
+  margin: 0 auto;
+  box-sizing: border-box;
+  flex-wrap: wrap;
 }
 
 .createform {
@@ -62,7 +62,6 @@
   cursor: pointer;
   background-color: green;
 }
-
 
 .loginform {
   display: flex;
@@ -108,8 +107,9 @@
   background-color: green;
 }
 
-.cancelSubBtn{
+.cancelSubBtn {
   background-color: #360101;
+  color: red;
 }
 
 @media (max-width: 600px) {
