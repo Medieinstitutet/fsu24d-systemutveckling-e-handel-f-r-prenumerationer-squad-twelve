@@ -120,14 +120,56 @@
 
 .subscription-row {
   display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 0.5rem;
+  justify-content: space-evenly;
+  background-color: #000000;
+  color: rgba(245, 245, 245, 0.652);
+  border-bottom: 3px solid #dcc0ff5b;
+  border-radius: 50px;
+  margin-left: 10%;
+  margin-right: 10%;
+  margin-bottom: 5px;
+  padding-bottom: 0.3rem;
+  padding-top: 0.3rem;
 }
 
 .subscription-row strong {
   font-weight: bold;
   min-width: 120px;
+}
+
+@media (max-width: 768px) {
+  .subscription-row {
+    flex-direction: column;
+    flex-wrap: wrap;
+    margin-left: 5%;
+    margin-right: 5%;
+    border-radius: 20px;
+    padding: 0.5rem;
+  }
+
+  .subscription-row strong {
+    min-width: unset;
+    width: 100%;
+    padding: 0.5rem 0.8rem;
+    margin-bottom: 5px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .subscription-row {
+    margin-left: 2%;
+    margin-right: 2%;
+    border-radius: 10px;
+    padding: 0.7rem;
+    font-size: 0.9em;
+  }
+
+  .subscription-row strong {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.95em;
+  }
 }
 
 @media (max-width: 600px) {
